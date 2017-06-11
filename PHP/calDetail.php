@@ -43,11 +43,12 @@
 
 function getMealInformation($MealID)
 {
-	$usrn = "alexhrao";
-	$pass = "Arodponyboy678";
-	$db = "meal_planner_db";
-	mysql_connect("mysql20.ezhostingserver.com:3306", $usrn, $pass);
-	mysql_select_db($db) or die("Unable to select DB!");
+	$dbServer = config('dbServer');
+	$dbUsername = config('dbUsername');
+	$dbPassword = config('dbPassword');
+	$dbDatabase = config('dbDatabase');
+	mysql_connect($dbServer, $dbUsername, $dbPassword);
+	mysql_select_db($dbDatabase) or die("Unable to select DB!");
 	$queryMeal = "SELECT meals.MealID, meals.Name, meals.Description FROM meals WHERE meals.MealID = $MealID;";
 	$queryRecipes = "SELECT recipes.RecipeID, recipes.Name, recipes.Instructions FROM meals INNER JOIN mealrecipes ON mealrecipes.MealID = $MealID INNER JOIN recipes ON recipes.RecipeID = mealrecipes.RecipeID;";
 	$resultMeal = mysql_query($queryMeal);

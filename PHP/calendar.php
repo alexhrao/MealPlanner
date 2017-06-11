@@ -26,11 +26,12 @@
 
 <?php
 function getMealInformation() {
-	$usrn = "alexhrao";
-	$pass = "Arodponyboy678";
-	$db = "meal_planner_db";
-	mysql_connect("mysql20.ezhostingserver.com:3306", $usrn, $pass);
-	mysql_select_db($db) or die("Unable to select DB!");
+	$dbServer = config('dbServer');
+	$dbUsername = config('dbUsername');
+	$dbPassword = config('dbPassword');
+	$dbDatabase = config('dbDatabase');
+	mysql_connect($dbServer, $dbUsername, $dbPassword);
+	mysql_select_db($dbDatabase) or die("Unable to select DB!");
 	$queryDates = "SELECT meals.Name, meals.MealID, mealdates.MealDate, mealdates.MealTime, meals.Description FROM meals INNER JOIN mealdates ON mealdates.MealID = meals.MealID ORDER BY mealdates.MealDate";
 	$resultDates = mysql_query($queryDates);
 	$arrDates = array();

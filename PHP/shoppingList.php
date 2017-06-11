@@ -1,10 +1,11 @@
 <?php
 	function get_ShoppingListInfo($startDate, $endDate, $prefStore, $arrNoStore) {
-		$usrn = "alexhrao";
-		$pass = "Arodponyboy678";
-		$db = "meal_planner_db";
-		mysql_connect("mysql20.ezhostingserver.com:3306", $usrn, $pass);
-		mysql_select_db($db) or die("Unable to select DB!");
+		$dbServer = config('dbServer');
+		$dbUsername = config('dbUsername');
+		$dbPassword = config('dbPassword');
+		$dbDatabase = config('dbDatabase');
+		mysql_connect($dbServer, $dbUsername, $dbPassword);
+		mysql_select_db($dbDatabase) or die("Unable to select DB!");
 		array_unshift($arrNoStore, 0);
 		$queryIngred = "select ingredients.IngredientID, recipeingredients.amount, concat(format(recipeingredients.Amount, 2), ' ', ingredients.PricingUnit) as Ingredient, ingredients.PricingUnit from meals inner join mealdates on mealdates.MealID = meals.MealID inner join mealrecipes on mealrecipes.MealID = meals.MealID inner join recipes on recipes.RecipeID = mealrecipes.RecipeID inner join recipeingredients on recipeingredients.RecipeID = recipes.RecipeID inner join ingredients on ingredients.IngredientID = recipeIngredients.IngredientID where mealdates.MealDate >= \"$startDate\" and mealdates.MealDate <= \"$endDate\";"; # Get ALL ingredients needed!
 		$ingredID = mysql_query($queryIngred);
@@ -92,11 +93,12 @@
 	}
 	function get_StoreInfo()
 	{
-		$usrn = "alexhrao";
-		$pass = "Arodponyboy678";
-		$db = "meal_planner_db";
-		mysql_connect("mysql20.ezhostingserver.com:3306", $usrn, $pass);
-		mysql_select_db($db) or die("Unable to select DB!");
+		$dbServer = config('dbServer');
+		$dbUsername = config('dbUsername');
+		$dbPassword = config('dbPassword');
+		$dbDatabase = config('dbDatabase');
+		mysql_connect($dbServer, $dbUsername, $dbPassword);
+		mysql_select_db($dbDatabase) or die("Unable to select DB!");
 		$query = "Select stores.StoreID, stores.Name from stores;";
 		$result = mysql_query($query);
 		$arrStores = array();
