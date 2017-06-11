@@ -1,0 +1,10 @@
+<!-- Edit this file to change the layout of each record in the table view -->
+<!-- To disable clicking of a field, remove the <%%select%%> and <%%endselect%%> formatters around it-->
+
+<!-- If you wish to hide the table view header that contains the column titles, -->
+<!-- open the generated 'recipeingredients_view.php' file in your text editor and -->
+<!-- change the value of $x->ShowTableHeader to 0 -->
+
+		<td id="recipeingredients-RecipeID-<%%VALUE(RecipeIngredientID)%%>" class="recipeingredients-RecipeID text-right"><%%SELECT%%><%%VALUE(RecipeID)%%><%%ENDSELECT%%></td>
+		<td id="recipeingredients-IngredientID-<%%VALUE(RecipeIngredientID)%%>" class="recipeingredients-IngredientID text-right"><%%SELECT%%><%%VALUE(IngredientID)%%><%%ENDSELECT%%></td>
+		<td id="recipeingredients-Amount-<%%VALUE(RecipeIngredientID)%%>" class="recipeingredients-Amount text-right"><%%SELECT%%><%%VALUE(Amount)%%><%%ENDSELECT%%></td>

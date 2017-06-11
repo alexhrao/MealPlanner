@@ -1,0 +1,10 @@
+<!-- Edit this file to change the layout of each record in the table view -->
+<!-- To disable clicking of a field, remove the <%%select%%> and <%%endselect%%> formatters around it-->
+
+<!-- If you wish to hide the table view header that contains the column titles, -->
+<!-- open the generated 'mealdates_view.php' file in your text editor and -->
+<!-- change the value of $x->ShowTableHeader to 0 -->
+
+		<td id="mealdates-MealID-<%%VALUE(MealDateID)%%>" class="mealdates-MealID text-right"><%%SELECT%%><%%VALUE(MealID)%%><%%ENDSELECT%%></td>
+		<td id="mealdates-MealDate-<%%VALUE(MealDateID)%%>" class="mealdates-MealDate "><%%SELECT%%><%%VALUE(MealDate)%%><%%ENDSELECT%%></td>
+		<td id="mealdates-MealTime-<%%VALUE(MealDateID)%%>" class="mealdates-MealTime "><%%SELECT%%><%%VALUE(MealTime)%%><%%ENDSELECT%%></td>
