@@ -1,11 +1,10 @@
 runLocal: 
 	rm -f -R /Applications/XAMPP/xamppfiles/htdocs/*
-	cp ~/Documents/MealPlanner/Configurations/Development.php ~/Documents/MealPlanner/PHP/config.php
 	cp -R ~/Documents/MealPlanner/PHP/ /Applications/XAMPP/xamppfiles/htdocs/
+	cp ~/Documents/MealPlanner/Configurations/Development.php /Applications/XAMPP/xamppfiles/htdocs/config.php
 	/usr/bin/open -a "/Applications/Google Chrome.app" 'http://localhost:8080'
 
 checkpoint:
-	cp ~/Documents/MealPlanner/Configurations/Production.php ~/Documents/MealPlanner/PHP/config.php
 	git add *
 	git commit
 	git push
