@@ -1,3 +1,9 @@
+<html>
+	<header>
+		<title>Shopping List</title>
+	</header>
+</html>
+
 <?php
 	function get_ShoppingListInfo($startDate, $endDate, $prefStore, $arrNoStore) {
 		$dbServer = config('dbServer');
