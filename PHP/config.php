@@ -1,7 +1,7 @@
 <?php
-	$dbServer = 'localhost';
-	$dbUsername = 'root';
-	$dbPassword = '';
+	$dbServer = 'mysql20.ezhostingserver.com';
+	$dbUsername = 'alexhrao';
+	$dbPassword = 'Arodponyboy678';
 	$dbDatabase = 'meal_planner_db';
 
 	$adminConfig = array(

@@ -13,4 +13,27 @@
 			'icon' => 'path/to/icon' // optional icon to use with the link
 		);
 	 */
+	$homeLinks[] = array(
+		'url' => "calendar.php",
+		'title' => "Calendar",
+		'description' => 'View when your meals are in a calendar view',
+		'groups' => '*',
+		'table_group' => 0,
+		'grid_column_classes' => 'col-sm-3',
+		'panel_classes' => 'panel-warning',
+		'link_classes' => 'btn-primary',
+		'icon' => 'resources/table_icons/calendar.png'
+	);
+
+	$homeLinks[] = array(
+		'url' => "shoppingList.php",
+		'title' => "Shopping List",
+		'description' => 'Generate a shopping list',
+		'groups' => '*',
+		'table_group' => 0,
+		'grid_column_classes' => 'col-sm-3',
+		'panel_classes' => 'panel-warning',
+		'link_classes' => 'btn-primary',
+		'icon' => 'resources/table_icons/list.png'
+	);
 ?>

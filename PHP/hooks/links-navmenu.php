@@ -10,4 +10,18 @@
 			'table_group' => 0, // optional index of table group, default is 0
 		);
 	*/
+	$navLinks[] = array(
+		'url' => '/calendar.php',
+		'title' => 'Calendar',
+		'table_group' => 0,
+		'groups' => '*',
+		'icon' => 'resources/table_icons/calendar.png'
+	);
+	$navLinks[] = array(
+		'url' => '/shoppingList.php',
+		'title' => 'Shopping List',
+		'table_group' => 0,
+		'groups' => '*',
+		'icon' => 'resources/table_icons/list.png'
+	);
 		?>
