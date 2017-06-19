@@ -11,19 +11,19 @@
 		}
 
 		// set up tables
-		setupTable('mealdates', "create table if not exists `mealdates` (   `MealDateID` INT(11) not null auto_increment , primary key (`MealDateID`), `MealID` INT(11) not null , `MealDate` DATE not null , `MealTime` VARCHAR(50) ) CHARSET latin1", $silent);
+		setupTable('mealdates', "create table if not exists `mealdates` (   `MealDateID` INT(11) not null auto_increment , primary key (`MealDateID`), `MealID` INT(11) not null , `MealDate` DATE not null , `MealTime` VARCHAR(50) not null default 'Dinner' ) CHARSET latin1", $silent);
 		setupIndexes('mealdates', array('MealID'));
-		setupTable('meals', "create table if not exists `meals` (   `MealID` INT(11) not null auto_increment , primary key (`MealID`), `Name` VARCHAR(50) not null , unique(`Name`), `Description` TEXT , `MealTime` VARCHAR(50) ) CHARSET latin1", $silent);
-		setupTable('recipes', "create table if not exists `recipes` (   `RecipeID` INT(11) not null auto_increment , primary key (`RecipeID`), `Name` VARCHAR(50) not null , unique(`Name`), `DateCreated` DATE , `Instructions` TEXT , `Description` TEXT , `SourceID` INT(11) ) CHARSET latin1", $silent);
+		setupTable('meals', "create table if not exists `meals` (   `MealID` INT(11) not null auto_increment , primary key (`MealID`), `Name` VARCHAR(50) not null , unique `Name_unique` (`Name`), `Description` TEXT , `MealTime` VARCHAR(50) ) CHARSET latin1", $silent);
+		setupTable('recipes', "create table if not exists `recipes` (   `RecipeID` INT(11) not null auto_increment , primary key (`RecipeID`), `Name` VARCHAR(50) not null , unique `Name_unique` (`Name`), `DateCreated` DATE , `Instructions` TEXT , `Description` TEXT , `SourceID` INT(11) , `PrepTime` TIME default '00:00:00' , `Servings` TINYINT(2) default '0' ) CHARSET latin1", $silent);
 		setupIndexes('recipes', array('SourceID'));
-		setupTable('ingredients', "create table if not exists `ingredients` (   `IngredientID` INT(11) not null auto_increment , primary key (`IngredientID`), `Name` VARCHAR(50) not null , unique(`Name`), `PricingUnit` VARCHAR(50) , `RecipeUnit` VARCHAR(50) , `PluralForm` VARCHAR(50) , `Description` TEXT ) CHARSET latin1", $silent);
+		setupTable('ingredients', "create table if not exists `ingredients` (   `IngredientID` INT(11) not null auto_increment , primary key (`IngredientID`), `Name` VARCHAR(50) not null , unique `Name_unique` (`Name`), `PricingUnit` VARCHAR(50) , `RecipeUnit` VARCHAR(50) , `PluralForm` VARCHAR(50) , `Description` TEXT ) CHARSET latin1", $silent);
 		setupTable('mealrecipes', "create table if not exists `mealrecipes` (   `MealRecipeID` INT(11) not null auto_increment , primary key (`MealRecipeID`), `MealID` INT(11) not null , `RecipeID` INT(11) not null ) CHARSET latin1", $silent);
 		setupIndexes('mealrecipes', array('MealID','RecipeID'));
 		setupTable('recipeingredients', "create table if not exists `recipeingredients` (   `RecipeIngredientID` INT(11) not null auto_increment , primary key (`RecipeIngredientID`), `RecipeID` INT(11) not null , `IngredientID` INT(11) not null , `Amount` FLOAT(5,5) unsigned default '0.00' ) CHARSET latin1", $silent);
 		setupIndexes('recipeingredients', array('RecipeID','IngredientID'));
 		setupTable('ingredientstores', "create table if not exists `ingredientstores` (   `IngredientStoreID` INT(11) not null auto_increment , primary key (`IngredientStoreID`), `IngredientID` INT(11) not null , `StoreID` INT(11) not null , `Cost` DECIMAL(13,4) ) CHARSET latin1", $silent);
 		setupIndexes('ingredientstores', array('IngredientID','StoreID'));
-		setupTable('sources', "create table if not exists `sources` (   `SourceID` INT(11) not null auto_increment , primary key (`SourceID`), `FullName` VARCHAR(50) not null , unique(`FullName`), `PhoneNumber` VARCHAR(50) , `Description` VARCHAR(100) ) CHARSET latin1", $silent);
+		setupTable('sources', "create table if not exists `sources` (   `SourceID` INT(11) not null auto_increment , primary key (`SourceID`), `FullName` VARCHAR(50) not null , unique `FullName_unique` (`FullName`), `PhoneNumber` VARCHAR(50) , `Description` VARCHAR(100) ) CHARSET latin1", $silent);
 		setupTable('stores', "create table if not exists `stores` (   `StoreID` INT(11) not null auto_increment , primary key (`StoreID`), `Name` VARCHAR(50) not null , `PhoneNumber` VARCHAR(20) , `Location` TEXT , `Notes` TEXT ) CHARSET latin1", $silent);
 
 

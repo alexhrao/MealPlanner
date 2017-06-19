@@ -22,7 +22,7 @@
 		isEmail($email) -- returns $email if valid or false otherwise.
 		notifyMemberApproval($memberID) -- send an email to member acknowledging his approval by admin, returns false if no mail is sent
 		setupMembership() -- check if membership tables exist or not. If not, create them.
-		thisOr($this, $or) -- return $this if it has a value, or $or if not.
+		thisOr($this_val, $or) -- return $this_val if it has a value, or $or if not.
 		getUploadedFile($FieldName, $MaxSize=0, $FileTypes='csv|txt', $NoRename=false, $dir='')
 		toBytes($val)
 		convertLegacyOptions($CSVList)
@@ -33,8 +33,14 @@
 		application_url($page) -- return absolute URL of provided page
 		is_ajax() -- return true if this is an ajax request, false otherwise
 		array_trim($arr) -- recursively trim provided value/array
+		is_allowed_username($username, $exception = false) -- returns username if valid and unique, or false otherwise (if exception is provided and same as username, no uniqueness check is performed)
 		csrf_token($validate) -- csrf-proof a form
 		get_plugins() -- scans for installed plugins and returns them in an array ('name', 'title', 'icon' or 'glyphicon', 'admin_path')
+		maintenance_mode($new_status = '') -- retrieves (and optionally sets) maintenance mode status
+		html_attr($str) -- prepare $str to be placed inside an HTML attribute
+		Request($var) -- class for providing sanitized values of given request variable (->sql, ->attr, ->html, ->url, and ->raw)
+		Notification() -- class for providing a standardized html notifications functionality
+		sendmail($mail) -- sends an email using PHPMailer as specified in the assoc array $mail( ['to', 'name', 'subject', 'message', 'debug'] ) and returns true on success or an error message on failure
 	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	*/
 	########################################################################
@@ -187,29 +193,77 @@
 	########################################################################
 	if(!function_exists('sql')){
 		function sql($statment, &$o){
-			static $connected = false, $db_link; // $connect would be set to true on successful connection
+
+			/*
+				Supported options that can be passed in $o options array (as array keys):
+				'silentErrors': If true, errors will be returned in $o['error'] rather than displaying them on screen and exiting.
+			*/
+
+			global $Translation;
+			static $connected = false, $db_link;
+
+			$dbServer = config('dbServer');
+			$dbUsername = config('dbUsername');
+			$dbPassword = config('dbPassword');
+			$dbDatabase = config('dbDatabase');
+
+			ob_start();
 
 			if(!$connected){
 				/****** Connect to MySQL ******/
-				if(!($db_link = @db_connect(config('dbServer'), config('dbUsername'), config('dbPassword')))){
-					echo "<div class=\"alert alert-danger\">Couldn't connect to MySQL at '" . config('dbServer') . "'. You might need to re-configure this application. You can do so by manually editing the config.php file, or by deleting it to run the setup wizard.</div>";
-					exit;
+				if(!extension_loaded('mysql') && !extension_loaded('mysqli')){
+					echo Notification::placeholder();
+					echo Notification::show(array(
+						'message' => 'PHP is not configured to connect to MySQL on this machine. Please see <a href="http://www.php.net/manual/en/ref.mysql.php">this page</a> for help on how to configure MySQL.',
+						'class' => 'danger',
+						'dismiss_seconds' => 7200
+					));
+					$e=ob_get_contents(); ob_end_clean(); if($o['silentErrors']){ $o['error']=$e; return FALSE; }else{ echo $e; exit; }
+				}
+
+				if(!($db_link = @db_connect($dbServer, $dbUsername, $dbPassword))){
+					echo Notification::placeholder();
+					echo Notification::show(array(
+						'message' => db_error($db_link, true),
+						'class' => 'danger',
+						'dismiss_seconds' => 7200
+					));
+					$e=ob_get_contents(); ob_end_clean(); if($o['silentErrors']){ $o['error']=$e; return FALSE; }else{ echo $e; exit; }
 				}
 
 				/****** Select DB ********/
-				if(!db_select_db(config('dbDatabase'), $db_link)){
-					echo "<div class=\"alert alert-danger\">Couldn't connect to the database '" . config('dbDatabase') . "'.</div>";
-					exit;
+				if(!db_select_db($dbDatabase, $db_link)){
+					echo Notification::placeholder();
+					echo Notification::show(array(
+						'message' => db_error($db_link),
+						'class' => 'danger',
+						'dismiss_seconds' => 7200
+					));
+					$e=ob_get_contents(); ob_end_clean(); if($o['silentErrors']){ $o['error']=$e; return FALSE; }else{ echo $e; exit; }
 				}
 
 				$connected = true;
 			}
 
-			if(!$result = @db_query($statment)){
-				echo "An error occured while attempting to execute:<br><pre>".htmlspecialchars($statment)."</pre><br>MySQL said:<br><pre>".db_error(db_link())."</pre>";
-				exit;
+			if(!$result = @db_query($statment, $db_link)){
+				if(!stristr($statment, "show columns")){
+					// retrieve error codes
+					$errorNum = db_errno($db_link);
+					$errorMsg = htmlspecialchars(db_error($db_link));
+
+					if(getLoggedAdmin()) $errorMsg .= "<pre>{$Translation['query:']}\n" . htmlspecialchars($statment) . "</pre><i class=\"text-right\">{$Translation['admin-only info']}</i>";
+
+					echo Notification::placeholder();
+					echo Notification::show(array(
+						'message' => $errorMsg,
+						'class' => 'danger',
+						'dismiss_seconds' => 7200
+					));
+					$e = ob_get_contents(); ob_end_clean(); if($o['silentErrors']){ $o['error'] = $errorMsg; return false; }else{ echo $e; exit; }
+				}
 			}
 
+			ob_end_clean();
 			return $result;
 		}
 	}
@@ -273,17 +327,18 @@
 	function getPKFieldName($tn){
 		// get pk field name of given table
 
-		if(!$res=sql("show fields from `$tn`", $eo)){
-			return FALSE;
+		$stn = makeSafe($tn, false);
+		if(!$res = sql("show fields from `$stn`", $eo)){
+			return false;
 		}
 
-		while($row=db_fetch_assoc($res)){
-			if($row['Key']=='PRI'){
+		while($row = db_fetch_assoc($res)){
+			if($row['Key'] == 'PRI'){
 				return $row['Field'];
 			}
 		}
 
-		return FALSE;
+		return false;
 	}
 	########################################################################
 	function getCSVData($tn, $pkValue, $stripTags=true){
@@ -307,7 +362,7 @@
 	}
 	########################################################################
 	function errorMsg($msg){
-		echo "<div class=\"status\" style=\"font-weight: bold; color: red;\">$msg</div>";
+		echo "<div class=\"alert alert-danger\">{$msg}</div>";
 	}
 	########################################################################
 	function redirect($URL, $absolute=FALSE){
@@ -319,12 +374,31 @@
 		exit;
 	}
 	########################################################################
-	function htmlRadioGroup($name, $arrValue, $arrCaption, $selectedValue, $selClass="", $class="", $separator="<br>"){
-		if(is_array($arrValue)){
-			for($i=0; $i<count($arrValue); $i++){
-				$out.="<span onMouseOver=\"stm(".$name.$arrValue[$i]."Tip, toolTipStyle);\"  onMouseOut=\"htm();\" class=\"".($arrValue[$i]==$selectedValue ? $selClass :$class)."\"><input type=\"radio\" id=\"$name$i\" name=\"$name\" value=\"".$arrValue[$i]."\"".($arrValue[$i]==$selectedValue ? " checked" : "")."> <label for=\"$name$i\">".$arrCaption[$i]."</label></span>".$separator;
-			}
+	function htmlRadioGroup($name, $arrValue, $arrCaption, $selectedValue, $selClass = "text-primary", $class = "", $separator = "<br>"){
+		if(!is_array($arrValue)) return '';
+
+		ob_start();
+		?>
+		<div class="radio %%CLASS%%"><label>
+			<input type="radio" name="%%NAME%%" id="%%ID%%" value="%%VALUE%%" %%CHECKED%%> %%LABEL%%
+		</label></div>
+		<?php
+		$template = ob_get_contents();
+		ob_end_clean();
+
+		$out = '';
+		for($i = 0; $i < count($arrValue); $i++){
+			$replacements = array(
+				'%%CLASS%%' => html_attr($arrValue[$i] == $selectedValue ? $selClass :$class),
+				'%%NAME%%' => html_attr($name),
+				'%%ID%%' => html_attr($name . $i),
+				'%%VALUE%%' => html_attr($arrValue[$i]),
+				'%%LABEL%%' => $arrCaption[$i],
+				'%%CHECKED%%' => ($arrValue[$i]==$selectedValue ? " checked" : "")
+			);
+			$out .= str_replace(array_keys($replacements), array_values($replacements), $template);
 		}
+
 		return $out;
 	}
 	########################################################################
@@ -356,8 +430,38 @@
 		}
 	}
 	########################################################################
+	function bootstrapSelect($name, $arrValue, $arrCaption, $selectedValue, $class = '', $selectedClass = ''){
+		if($selectedClass == '') $selectedClass = $class;
+
+		$out = "<select class=\"form-control\" name=\"{$name}\" id=\"{$name}\">";
+		if(is_array($arrValue)){
+			for($i = 0; $i < count($arrValue); $i++){
+				$selected = "class=\"{$class}\"";
+				if($arrValue[$i] == $selectedValue) $selected = "selected class=\"{$selectedClass}\"";
+				$out .= "<option value=\"{$arrValue[$i]}\" {$selected}>{$arrCaption[$i]}</option>";
+			}
+		}
+		$out .= '</select>';
+
+		return $out;
+	}
+	########################################################################
+	function bootstrapSQLSelect($name, $sql, $selectedValue, $class = '', $selectedClass = ''){
+		$arrVal[] = '';
+		$arrCap[] = '';
+		if($res = sql($sql, $eo)){
+			while($row = db_fetch_row($res)){
+				$arrVal[] = $row[0];
+				$arrCap[] = $row[1];
+			}
+			return bootstrapSelect($name, $arrVal, $arrCap, $selectedValue, $class, $selectedClass);
+		}
+
+		return '';
+	}
+	########################################################################
 	function isEmail($email){
-		if(preg_match('/^([*+!.&#$¦\'\\%\/0-9a-z^_`{}=?~:-]+)@(([0-9a-z-]+\.)+[0-9a-z]{2,4})$/i', $email)){
+		if(preg_match('/^([*+!.&#$¦\'\\%\/0-9a-z^_`{}=?~:-]+)@(([0-9a-z-]+\.)+[0-9a-z]{2,45})$/i', $email)){
 			return $email;
 		}else{
 			return FALSE;
@@ -366,17 +470,16 @@
 	########################################################################
 	function notifyMemberApproval($memberID){
 		$adminConfig = config('adminConfig');
-		$memberID=strtolower($memberID);
+		$memberID = strtolower($memberID);
 
-		$email=sqlValue("select email from membership_users where lcase(memberID)='$memberID'");
-		if(!isEmail($email)){
-			return FALSE;
-		}
-		if(!@mail($email, $adminConfig['approvalSubject'], $adminConfig['approvalMessage'], "From: ".$adminConfig['senderName']." <".$adminConfig['senderEmail'].">")){
-			return FALSE;
-		}
+		$email = sqlValue("select email from membership_users where lcase(memberID)='{$memberID}'");
 
-		return TRUE;
+		return sendmail(array(
+			'to' => $email,
+			'name' => $memberID,
+			'subject' => $adminConfig['approvalSubject'],
+			'message' => nl2br($adminConfig['approvalMessage'])
+		));
 	}
 	########################################################################
 	function setupMembership(){
@@ -384,6 +487,12 @@
 		static $executed = false;
 		if($executed) return;
 		$executed = true;
+
+		/* abort if current page is one of the following exceptions */
+		$exceptions = array('pageEditMember.php', 'membership_passwordReset.php', 'membership_profile.php', 'membership_signup.php', 'pageChangeMemberStatus.php', 'pageDeleteGroup.php', 'pageDeleteMember.php', 'pageEditGroup.php', 'pageEditMemberPermissions.php', 'pageRebuildFields.php', 'pageSettings.php');
+		if(in_array(basename($_SERVER['PHP_SELF']), $exceptions)) return;
+
+		$eo = array('silentErrors' => true);
 
 		$adminConfig = config('adminConfig');
 		$today = @date('Y-m-d');
@@ -399,6 +508,14 @@
 		// get db tables
 		$tables = array();
 		$res = sql("show tables", $eo);
+
+		if(!$res){
+			include_once(dirname(__FILE__) . '/../header.php');
+			echo $eo['error'];
+			include_once(dirname(__FILE__) . '/../footer.php');
+			exit;
+		}
+
 		while($row = db_fetch_array($res)) $tables[] = $row[0];
 
 		// check if membership tables exist or not
@@ -524,8 +641,8 @@
 	}
 
 	########################################################################
-	function thisOr($this, $or='&nbsp;'){
-		return ($this!='' ? $this : $or);
+	function thisOr($this_val, $or = '&nbsp;'){
+		return ($this_val != '' ? $this_val : $or);
 	}
 	########################################################################
 	function getUploadedFile($FieldName, $MaxSize=0, $FileTypes='csv|txt', $NoRename=false, $dir=''){
@@ -619,18 +736,23 @@
 	}
 	########################################################################
 	function time24($t = false){
-		if($t === false) $t = time();
+		if($t === false) $t = date('Y-m-d H:i:s');
 		return date('H:i:s', strtotime($t));
 	}
 	########################################################################
 	function time12($t = false){
-		if($t === false) $t = time();
+		if($t === false) $t = date('Y-m-d H:i:s');
 		return date('h:i:s A', strtotime($t));
 	}
 	########################################################################
-	function application_url($page = ''){
-		$host = $_SERVER['HTTP_HOST'];
-		$uri = dirname($_SERVER['PHP_SELF']);
+	function application_url($page = '', $s = false){
+		if($s === false) $s = $_SERVER;
+		$ssl = (!empty($s['HTTPS']) && $s['HTTPS'] == 'on');
+		$http = ($ssl ? 'https:' : 'http:');
+		$port = $s['SERVER_PORT'];
+		$port = ((!$ssl && $port == '80') || ($ssl && $port == '443')) ? '' : ':' . $port;
+		$host = (isset($s['HTTP_HOST']) ? $s['HTTP_HOST'] : $s['SERVER_NAME'] . $port);
+		$uri = dirname($s['SCRIPT_NAME']);
 
 		/* app folder name (without the ending /admin part) */
 		$app_folder_is_admin = false;
@@ -640,9 +762,7 @@
 
 		if(substr($uri, -12, 12) == '/admin/admin') $uri = substr($uri, 0, -6);
 		elseif(substr($uri, -6, 6) == '/admin' && !$app_folder_is_admin) $uri = substr($uri, 0, -6);
-		elseif($uri == '/') $uri = '';
-
-		$http = (strtolower($_SERVER['HTTPS']) == 'on' ? 'https:' : 'http:');
+		elseif($uri == '/' || $uri == '\\') $uri = '';
 
 		return "{$http}//{$host}{$uri}/{$page}";
 	}
@@ -656,9 +776,12 @@
 		return array_map('array_trim', $arr);
 	}
 	########################################################################
-	function is_allowed_username($username){
+	function is_allowed_username($username, $exception = false){
 		$username = trim(strtolower($username));
 		if(!preg_match('/^[a-z0-9][a-z0-9 _.@]{3,19}$/', $username) || preg_match('/(@@|  |\.\.|___)/', $username)) return false;
+
+		if($username == $exception) return $username;
+
 		if(sqlValue("select count(1) from membership_users where lcase(memberID)='{$username}'")) return false;
 		return $username;
 	}
@@ -672,10 +795,12 @@
 
 		usage:
 			1. in a new form that needs csrf proofing: echo csrf_token();
+			   >> in case of ajax requests and similar, retrieve token directly
+			      by calling csrf_token(false, true);
 			2. when validating a submitted form: if(!csrf_token(true)){ reject_submission_somehow(); }
 	*/
-	function csrf_token($validate = false){
-		$token_age = 30 * 60;
+	function csrf_token($validate = false, $token_only = false){
+		$token_age = 60 * 60;
 		/* retrieve token from session */
 		$csrf_token = (isset($_SESSION['csrf_token']) ? $_SESSION['csrf_token'] : false);
 		$csrf_token_expiry = (isset($_SESSION['csrf_token_expiry']) ? $_SESSION['csrf_token_expiry'] : false);
@@ -689,6 +814,7 @@
 				$_SESSION['csrf_token_expiry'] = $csrf_token_expiry;
 			}
 
+			if($token_only) return $csrf_token;
 			return '<input type="hidden" id="csrf_token" name="csrf_token" value="' . $csrf_token . '">';
 		}
 
@@ -721,3 +847,262 @@
 
 		return $plugins;
 	}
+	########################################################################
+	function maintenance_mode($new_status = ''){
+		$maintenance_file = dirname(__FILE__) . '/.maintenance';
+
+		if($new_status === true){
+			/* turn on maintenance mode */
+			@touch($maintenance_file);
+		}elseif($new_status === false){
+			/* turn off maintenance mode */
+			@unlink($maintenance_file);
+		}
+
+		/* return current maintenance mode status */
+		return is_file($maintenance_file);
+	}
+	########################################################################
+	function handle_maintenance($echo = false){
+		if(!maintenance_mode()) return;
+
+		global $Translation;
+		$adminConfig = config('adminConfig');
+
+		$admin = getLoggedAdmin();
+		if($admin){
+			return ($echo ? '<div class="alert alert-danger" style="margin: 5em auto -5em;"><b>' . $Translation['maintenance mode admin notification'] . '</b></div>' : '');
+		}
+
+		if(!$echo) exit;
+
+		exit('<div class="alert alert-danger" style="margin-top: 5em; font-size: 2em;"><i class="glyphicon glyphicon-exclamation-sign"></i> ' . $adminConfig['maintenance_mode_message'] . '</div>');
+	}
+	#########################################################
+	function html_attr($str){
+		return htmlspecialchars($str, ENT_QUOTES, datalist_db_encoding);
+	}
+	#########################################################
+	class Request{
+		var $sql, $url, $attr, $html, $raw;
+
+		function __construct($var, $filter = false){
+			$this->Request($var, $filter);
+		}
+
+		function Request($var, $filter = false){
+			$unsafe = (isset($_REQUEST[$var]) ? $_REQUEST[$var] : '');
+			if(get_magic_quotes_gpc()) $unsafe = stripslashes($unsafe);
+
+			if($filter){
+				$unsafe = call_user_func($filter, $unsafe);
+			}
+
+			$this->sql = makeSafe($unsafe, false);
+			$this->url = urlencode($unsafe);
+			$this->attr = html_attr($unsafe);
+			$this->html = html_attr($unsafe);
+			$this->raw = $unsafe;
+		}
+	}
+	#########################################################
+	class Notification{
+		/*
+			Usage:
+			* in the main document, initiate notifications support using this PHP code:
+				echo Notification::placeholder();
+
+			* whenever you want to show a notifcation, use this PHP code:
+				echo Notification::show(array(
+					'message' => 'Notification text to display',
+					'class' => 'danger', // or other bootstrap state cues, 'default' if not provided
+					'dismiss_seconds' => 5, // optional auto-dismiss after x seconds
+					'dismiss_days' => 7, // optional dismiss for x days if closed by user -- must provide an id
+					'id' => 'xyz' // optional string to identify the notification -- must use for 'dismiss_days' to work
+				));
+		*/
+		protected static $placeholder_id; /* to force a single notifcation placeholder */
+
+		protected function __construct(){} /* to prevent initialization */
+
+		public static function placeholder(){
+			if(self::$placeholder_id) return ''; // output placeholder code only once
+
+			self::$placeholder_id = 'notifcation-placeholder-' . rand(10000000, 99999999);
+
+			ob_start();
+			?>
+
+			<div class="notifcation-placeholder" id="<?php echo self::$placeholder_id; ?>"></div>
+			<script>
+				$j(function(){
+					if(window.show_notification != undefined) return;
+
+					window.show_notification = function(options){
+						/* wait till all dependencies ready */
+						if(window.notifications_ready == undefined){
+							var op = options;
+							setTimeout(function(){ show_notification(op); }, 20);
+							return;
+						}
+
+						var dismiss_class = '';
+						var dismiss_icon = '';
+						var cookie_name = 'hide_notification_' + options.id;
+						var notif_id = 'notifcation-' + Math.ceil(Math.random() * 1000000);
+
+						/* apply provided notficiation id if unique in page */
+						if(options.id != undefined){
+							if(!$j('#' + options.id).length) notif_id = options.id;
+						}
+
+						/* notifcation should be hidden? */
+						if(Cookies.get(cookie_name) != undefined) return;
+
+						/* notification should be dismissable? */
+						if(options.dismiss_seconds > 0 || options.dismiss_days > 0){
+							dismiss_class = ' alert-dismissible';
+							dismiss_icon = '<button type="button" class="close" data-dismiss="alert">&times;</button>';
+						}
+
+						/* remove old dismissed notficiations */
+						$j('.alert-dismissible.invisible').remove();
+
+						/* append notification to notifications container */
+						$j(
+							'<div class="alert alert-' + options['class'] + dismiss_class + '" id="' + notif_id + '">' + 
+								dismiss_icon +
+								options.message + 
+							'</div>'
+						).appendTo('#<?php echo self::$placeholder_id; ?>');
+
+						var this_notif = $j('#' + notif_id);
+
+						/* dismiss after x seconds if requested */
+						if(options.dismiss_seconds > 0){
+							setTimeout(function(){ this_notif.addClass('invisible'); }, options.dismiss_seconds * 1000);
+						}
+
+						/* dismiss for x days if requested and user dismisses it */
+						if(options.dismiss_days > 0){
+							var ex_days = options.dismiss_days;
+							this_notif.on('closed.bs.alert', function(){
+								/* set a cookie not to show this alert for ex_days */
+								Cookies.set(cookie_name, '1', { expires: ex_days });
+							});
+						}
+					}
+
+					/* cookies library already loaded? */
+					if(undefined != window.Cookies){
+						window.notifications_ready = true;
+						return;
+					}
+
+					/* load cookies library */
+					$j.ajax({
+						url: '<?php echo PREPEND_PATH; ?>resources/jscookie/js.cookie.js',
+						dataType: 'script',
+						cache: true,
+						success: function(){ window.notifications_ready = true; }
+					});
+				})
+			</script>
+
+			<?php
+			$html = ob_get_contents();
+			ob_end_clean();
+
+			return $html;            
+		}
+
+		protected static function default_options(&$options){
+			if(!isset($options['message'])) $options['message'] = 'Notification::show() called without a message!';
+
+			if(!isset($options['class'])) $options['class'] = 'default';
+
+			if(!isset($options['dismiss_seconds']) || isset($options['dismiss_days'])) $options['dismiss_seconds'] = 0;
+
+			if(!isset($options['dismiss_days'])) $options['dismiss_days'] = 0;
+			if(!isset($options['id'])){
+				$options['id'] = 0;
+				$options['dismiss_days'] = 0;
+			}
+		}
+
+		/**
+		 *  @brief Notification::show($options) displays a notification
+		 *  
+		 *  @param $options assoc array
+		 *  
+		 *  @return html code for displaying the notifcation
+		 */
+		public static function show($options = array()){
+			self::default_options($options);
+
+			ob_start();
+			?>
+			<script>
+				$j(function(){
+					show_notification(<?php echo json_encode($options); ?>);
+				})
+			</script>
+			<?php
+			$html = ob_get_contents();
+			ob_end_clean();
+
+			return $html;
+		}
+	}
+	#########################################################
+	function sendmail($mail){
+		if(!isset($mail['to'])) return 'No recipient defined';
+		if(!isEmail($mail['to'])) return 'Invalid recipient email';
+
+		$mail['subject'] = isset($mail['subject']) ? $mail['subject'] : '';
+		$mail['message'] = isset($mail['message']) ? $mail['message'] : '';
+		$mail['name'] = isset($mail['name']) ? $mail['name'] : '';
+		$mail['debug'] = isset($mail['debug']) ? min(4, max(0, intval($mail['debug']))) : 0;
+
+		$cfg = config('adminConfig');
+		$smtp = ($cfg['mail_function'] == 'smtp');
+
+		if(!class_exists('PHPMailer')){
+			$curr_dir = dirname(__FILE__);
+			include("{$curr_dir}/../resources/PHPMailer/class.phpmailer.php");
+			if($smtp) include("{$curr_dir}/../resources/PHPMailer/class.smtp.php");
+		}
+
+		$pm = new PHPMailer;
+		$pm->CharSet = datalist_db_encoding;
+
+		if($smtp){
+			$pm->isSMTP();
+			$pm->SMTPDebug = $mail['debug'];
+			$pm->Debugoutput = 'html';
+			$pm->Host = $cfg['smtp_server'];
+			$pm->Port = $cfg['smtp_port'];
+			$pm->SMTPAuth = true;
+			$pm->SMTPSecure = $cfg['smtp_encryption'];
+			$pm->Username = $cfg['smtp_user'];
+			$pm->Password = $cfg['smtp_pass'];
+		}
+
+		$pm->setFrom($cfg['senderEmail'], $cfg['senderName']);
+		$pm->addAddress($mail['to'], $mail['name']);
+		$pm->Subject = $mail['subject'];
+
+		/* if message already contains html tags, don't apply nl2br */
+		if($mail['message'] == strip_tags($mail['message']))
+			$mail['message'] = nl2br($mail['message']);
+
+		$pm->msgHTML($mail['message'], realpath("{$curr_dir}/.."));
+
+		/* if sendmail_handler(&$pm) is defined (in hooks/__global.php) */
+		if(function_exists('sendmail_handler')) sendmail_handler($pm);
+
+		if(!$pm->send()) return $pm->ErrorInfo;
+
+		return true;
+	}
+

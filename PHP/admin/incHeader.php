@@ -1,46 +1,36 @@
 <!DOCTYPE html>
+<?php if(!defined('PREPEND_PATH')) define('PREPEND_PATH', '../'); ?>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
 <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
 	<head>
-		<meta charset="iso-8859-1">
+		<meta charset="<?php echo datalist_db_encoding; ?>">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
 		<meta name="description" content="">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title><?php echo $Translation['membership management']; ?></title>
+		<title><?php echo ucwords('Meal Planner') . ' | ' . $Translation['admin area']; ?><?php echo html_attr(isset($GLOBALS['page_title']) ? " | {$GLOBALS['page_title']}" : ''); ?></title>
 
-		<link id="browser_favicon" rel="shortcut icon" href="../resources/table_icons/administrator.png">
+		<link id="browser_favicon" rel="shortcut icon" href="<?php echo PREPEND_PATH; ?>resources/table_icons/administrator.png">
 
-		<link rel="stylesheet" href="../resources/initializr/css/bootstrap.css">
+		<link rel="stylesheet" href="<?php echo PREPEND_PATH; ?>resources/initializr/css/bootstrap.css">
 		<!--[if gt IE 8]><!-->
-			<link rel="stylesheet" href="../resources/initializr/css/bootstrap-theme.css">
+			<link rel="stylesheet" href="<?php echo PREPEND_PATH; ?>resources/initializr/css/bootstrap-theme.css">
 		<!--<![endif]-->
-		<link rel="stylesheet" href="../dynamic.css.php">
+		<link rel="stylesheet" href="<?php echo PREPEND_PATH; ?>dynamic.css.php">
 
 		<!--[if lt IE 9]>
-			<script src="../resources/initializr/js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+			<script src="<?php echo PREPEND_PATH; ?>resources/initializr/js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
 		<![endif]-->
-		<script src="../resources/jquery/js/jquery-1.11.2.min.js"></script>
-		<script>var $j = jQuery.noConflict();</script>
+		<script src="<?php echo PREPEND_PATH; ?>resources/jquery/js/jquery-1.11.2.min.js"></script>
+		<script>var $j = jQuery.noConflict(); var AppGini = AppGini || {};</script>
 		<script src="toolTips.js"></script>
-		<script src="../resources/initializr/js/vendor/bootstrap.min.js"></script>
-		<script src="../resources/lightbox/js/prototype.js"></script>
-		<script src="../resources/lightbox/js/scriptaculous.js?load=effects"></script>
+		<script src="<?php echo PREPEND_PATH; ?>resources/initializr/js/vendor/bootstrap.min.js"></script>
+		<script src="<?php echo PREPEND_PATH; ?>resources/lightbox/js/prototype.js"></script>
+		<script src="<?php echo PREPEND_PATH; ?>resources/lightbox/js/scriptaculous.js?load=effects"></script>
 		<script>
 
 			// VALIDATION FUNCTIONS FOR VARIOUS PAGES
-
-			function jsValidateMember(){
-				var p1=document.getElementById('password').value;
-				var p2=document.getElementById('confirmPassword').value;
-				if(p1=='' || p1==p2){
-					return true;
-				}else{
-					modal_window({message: '<div class="alert alert-danger"><?php echo $Translation['password mismatch'] ; ?></div>', title: "<?php echo $Translation['error'] ; ?>" });
-					return false;
-				}
-			}
 
 			function jsValidateEmail(address){
 				var reg = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
@@ -164,7 +154,7 @@
 		</style>
 	</head>
 	<body>
-	<div class="container">
+	<div class="container theme-bootstrap theme-3d">
 
 		<!-- top navbar -->
 		<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
@@ -175,7 +165,7 @@
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
 				</button>
-				<a class="navbar-brand" href="pageHome.php"><span class="text-warning"><i class="glyphicon glyphicon-cog"></i> <?php echo $Translation['admin area']; ?></span></a>
+				<a class="navbar-brand" href="pageHome.php"><span class="text-primary"><i class="glyphicon glyphicon-cog"></i> <?php echo $Translation['admin area']; ?></span></a>
 			</div>
 
 			<div class="collapse navbar-collapse navbar-ex1-collapse">
@@ -235,13 +225,27 @@
 				</ul>
 
 				<div class="navbar-right">
-					<a href="../index.php" class="btn btn-success navbar-btn"><?php echo $Translation["user's area"] ; ?></a>
-					<a href="pageHome.php?signOut=1" class="btn btn-warning navbar-btn"><i class="glyphicon glyphicon-log-out"></i> <?php echo $Translation["sign out"] ; ?></a>
+					<a href="<?php echo PREPEND_PATH; ?>index.php" class="btn btn-success navbar-btn"><?php echo $Translation["user's area"] ; ?></a>
+					<a href="<?php echo PREPEND_PATH; ?>index.php?signOut=1" class="btn btn-warning navbar-btn"><i class="glyphicon glyphicon-log-out"></i> <?php echo $Translation["sign out"] ; ?></a>
 				</div>
 			</div>
 		</nav>
+		<script>
+			/* periodically check if user is still signed in */
+			setInterval(function(){
+				$j.ajax({
+					url: '<?php echo PREPEND_PATH; ?>ajax_check_login.php',
+					success: function(username){
+						if(!username.length) window.location = '<?php echo PREPEND_PATH; ?>index.php?signIn=1';
+					}
+				});
+			}, 60000);
+		</script>
 
+		<?php echo handle_maintenance(true); ?>
 		<div style="height: 80px;"></div>
+
+		<?php echo Notification::placeholder(); ?>
 
 		<!-- tool tips support -->
 		<div id="TipLayer" style="visibility:hidden;position:absolute;z-index:1000;top:-100"></div>

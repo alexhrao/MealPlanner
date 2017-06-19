@@ -21,16 +21,16 @@
 			<fieldset class="form-horizontal">
 
 				<div class="form-group">
-					<label for="FullName" class="control-label col-lg-3">Name<span class="text-danger"><%%TRANSLATION(*)%%></span> <button class="btn btn-info btn-xs vspacer-sm" type="button" data-toggle="collapse" tabindex="-1" data-target="#FullName-description"><i class="glyphicon glyphicon-info-sign"></i></button></label>
+					<label for="FullName" class="control-label col-lg-3">Name<span class="text-danger"><%%TRANSLATION(*)%%></span> <i class="glyphicon glyphicon-info-sign text-info" data-toggle="collapse" data-target="#FullName-description"></i></label>
 					<div class="col-lg-9">
 						<span class="help-block collapse" id="FullName-description"><div class="alert alert-info">What is the name of this source?</div></span>
 
-						<input maxlength="50" type="text" class="form-control" name="FullName" id="FullName" value="<%%VALUE(FullName)%%>" required>
+						<input maxlength="50" type="text" class="form-control" name="FullName" id="FullName" value="<%%VALUE(FullName)%%>" required><div class="text-danger vspacer-md" id="FullName-uniqueness-note" style="display: none;"><%%TRANSLATION(unique field error)%%></div>
 					</div>
 				</div>
 
 				<div class="form-group">
-					<label for="PhoneNumber" class="control-label col-lg-3">Phone <button class="btn btn-info btn-xs vspacer-sm" type="button" data-toggle="collapse" tabindex="-1" data-target="#PhoneNumber-description"><i class="glyphicon glyphicon-info-sign"></i></button></label>
+					<label for="PhoneNumber" class="control-label col-lg-3">Phone <i class="glyphicon glyphicon-info-sign text-info" data-toggle="collapse" data-target="#PhoneNumber-description"></i></label>
 					<div class="col-lg-9">
 						<span class="help-block collapse" id="PhoneNumber-description"><div class="alert alert-info">What is the phone number for this source, if applicable?</div></span>
 
@@ -81,6 +81,16 @@
 			var add_new_mode = (!$j('input[name=SelectedID]').val());
 			var embedded_mode = ($j('input[name=Embedded]').val() == 1);
 
+			/* auto-close embedded page? */
+			var autoclose_mode = ($j('input[name=AutoClose]').val() == 1);
+			var record_added_ok = (location.search.split('record-added-ok=').length == 2);
+			var record_updated_ok = (location.search.split('record-updated-ok=').length == 2);
+			if((record_added_ok || record_updated_ok) && embedded_mode && autoclose_mode){
+				setTimeout(function(){
+					window.parent.jQuery('.modal').modal('hide');
+				}, 2000);
+			}
+
 			$j('select, input[type=text], textarea').not(':disabled').eq(0).focus();
 			$j('form').eq(0).change(function(){
 				if($j(this).data('already_changed')) return;
@@ -125,7 +135,7 @@
 
 			if(!embedded_mode){
 				/* add a horizontal spacer to [add new parent] buttons that don't have a spacered element before them */
-				$j('.add_new_parent').prev(':not(.hspacer-lg)').next().addClass('hspacer-lg');
+				$j('.add_new_parent').prev(':not(.hspacer-md)').next().addClass('hspacer-md');
 
 				$j('.add_new_parent').click(function(){
 					var pt = $j(this).attr('id').replace(/_add_new$/, '');
@@ -183,6 +193,27 @@
 							break;
 					}
 
+				}
+			});
+
+			enforce_uniqueness('sources', 'FullName');
+
+			/* load admin tools for admin user */
+			if(!add_new_mode){
+				$j('body').append('<div id="admin-tools-appendix"></div>');
+				$j('#admin-tools-appendix').load(
+					'ajax_admin_tools.php?table=sources&id=<%%URLVALUE(SourceID)%%>',
+					function(resp){
+						if(!resp.length) return;
+						$j.ajax('ajax_admin_tools.php?action=get_admin_tools_js&table=sources&id=<%%URLVALUE(SourceID)%%>');
+					}
+				);
+			}
+
+			/* warn user if 'add new' clicked while unsaved changes exist */
+			$j('#addNew').click(function(){
+				if($j('#deselect.btn-warning').length){
+					return confirm('<%%TRANSLATION(discard changes confirm)%%>');
 				}
 			});
 

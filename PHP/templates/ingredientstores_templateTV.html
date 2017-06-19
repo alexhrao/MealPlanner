@@ -1,9 +1,9 @@
 <!-- Edit this file to change the layout of each record in the table view -->
-<!-- To disable clicking of a field, remove the <%%select%%> and <%%endselect%%> formatters around it-->
+<!-- To disable clicking of a field, remove the <%%SELECT%%> and <%%ENDSELECT%%> formatters around it-->
 
 <!-- If you wish to hide the table view header that contains the column titles, -->
-<!-- open the generated 'ingredientstores_view.php' file in your text editor and -->
-<!-- change the value of $x->ShowTableHeader to 0 -->
+<!-- add the following to the ingredientstores_init() hook (in hooks/ingredientstores.php file) -->
+<!--     $options->ShowTableHeader = 0;     -->
 
 		<td id="ingredientstores-IngredientID-<%%VALUE(IngredientStoreID)%%>" class="ingredientstores-IngredientID text-right"><%%SELECT%%><%%VALUE(IngredientID)%%><%%ENDSELECT%%></td>
 		<td id="ingredientstores-StoreID-<%%VALUE(IngredientStoreID)%%>" class="ingredientstores-StoreID text-right"><%%SELECT%%><%%VALUE(StoreID)%%><%%ENDSELECT%%></td>

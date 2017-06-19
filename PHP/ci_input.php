@@ -54,6 +54,11 @@ class CI_Input {
 										"Redirect\s+302"			=> '[removed]'
 									);
 
+
+	function __construct(){
+		$this->CI_Input();
+	}
+
 	/**
 	* Constructor
 	*
@@ -1010,13 +1015,17 @@ class CI_Input {
 		if (function_exists('html_entity_decode') && (strtolower($charset) != 'utf-8' OR version_compare(phpversion(), '5.0.0', '>=')))
 		{
 			$str = @html_entity_decode($str, ENT_COMPAT, $charset);
-			$str = preg_replace('~&#x(0*[0-9a-f]{2,5})~ei', 'chr(hexdec("\\1"))', $str);
-			return preg_replace('~&#([0-9]{2,4})~e', 'chr(\\1)', $str);
+			// $str = preg_replace('~&#x(0*[0-9a-f]{2,5})~ei', 'chr(hexdec("\\1"))', $str);
+			$str = preg_replace_callback('~&#x(0*[0-9a-f]{2,5})~i', '_chrhexdec', $str);
+			// return preg_replace('~&#([0-9]{2,4})~e', 'chr(\\1)', $str);
+			return preg_replace_callback('~&#([0-9]{2,4})~', '_chr', $str);
 		}
 
 		// Numeric Entities
-		$str = preg_replace('~&#x(0*[0-9a-f]{2,5});{0,1}~ei', 'chr(hexdec("\\1"))', $str);
-		$str = preg_replace('~&#([0-9]{2,4});{0,1}~e', 'chr(\\1)', $str);
+		// $str = preg_replace('~&#x(0*[0-9a-f]{2,5});{0,1}~ei', 'chr(hexdec("\\1"))', $str);
+		$str = preg_replace_callback('~&#x(0*[0-9a-f]{2,5});{0,1}~i', '_chrhexdec', $str);
+		// $str = preg_replace('~&#([0-9]{2,4});{0,1}~e', 'chr(\\1)', $str);
+		$str = preg_replace_callback('~&#([0-9]{2,4});{0,1}~', '_chr', $str);
 
 		// Literal Entities - Slightly slow so we do another check
 		if (stristr($str, '&') === FALSE)
@@ -1027,6 +1036,15 @@ class CI_Input {
 		return $str;
 	}
 
+	/* callback function added for use in _html_entity_decode */
+	function _chr($m){
+		return chr($m[1]);
+	}
+
+	/* callback function added for use in _html_entity_decode */
+	function _chrhexdec($m){
+		return chr(hexdec($m[1]));
+	}
 	// --------------------------------------------------------------------
 
 	/**

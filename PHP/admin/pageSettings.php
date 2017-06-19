@@ -1,6 +1,7 @@
 <?php
 	$currDir = dirname(__FILE__);
 	require("{$currDir}/incCommon.php");
+	$GLOBALS['page_title'] = $Translation['admin settings'];
 	include("{$currDir}/incHeader.php");
 
 	if(isset($_POST['saveChanges'])){
@@ -14,37 +15,40 @@
 			include("{$currDir}/incFooter.php");
 		}
 
+		// apply undo_magic_quotes to all input
+		$post = @array_map('undo_magic_quotes', $_POST);
+
 		// validate inputs
 		$errors = array();
 
 		// if admin username changed, check if the new username already exists
-		$adminUsername = makeSafe(strtolower($_POST['adminUsername']));
-		if($adminConfig['adminUsername'] != strtolower(undo_magic_quotes($_POST['adminUsername'])) && sqlValue("select count(1) from membership_users where lcase(memberID)='$adminUsername'")){
+		$adminUsername = makeSafe(strtolower($post['adminUsername']));
+		if($adminConfig['adminUsername'] != strtolower($post['adminUsername']) && sqlValue("select count(1) from membership_users where lcase(memberID)='$adminUsername'")){
 			$errors[] = $Translation['unique admin username error'] ;
 		}
 
 		// if anonymous username changed, check if the new username already exists
-		$anonymousMember = makeSafe(strtolower($_POST['anonymousMember']));
-		if($adminConfig['anonymousMember'] != strtolower(undo_magic_quotes($_POST['anonymousMember'])) && sqlValue("select count(1) from membership_users where lcase(memberID)='$anonymousMember'")){
+		$anonymousMember = makeSafe(strtolower($post['anonymousMember']));
+		if($adminConfig['anonymousMember'] != strtolower($post['anonymousMember']) && sqlValue("select count(1) from membership_users where lcase(memberID)='$anonymousMember'")){
 			$errors[] = $Translation['unique anonymous username error'];
 		}
 
 		// if anonymous group name changed, check if the new group name already exists
-		$anonymousGroup = makeSafe($_POST['anonymousGroup']);
-		if($adminConfig['anonymousGroup'] != undo_magic_quotes($_POST['anonymousGroup']) && sqlValue("select count(1) from membership_groups where name='$anonymousGroup'")){
+		$anonymousGroup = makeSafe($post['anonymousGroup']);
+		if($adminConfig['anonymousGroup'] != $post['anonymousGroup'] && sqlValue("select count(1) from membership_groups where name='$anonymousGroup'")){
 			$errors[] = $Translation['unique anonymous group name error'];
 		}
 
-		$adminPassword = $_POST['adminPassword'];
-		if($adminPassword != '' && $adminPassword == $_POST['confirmPassword']){
+		$adminPassword = $post['adminPassword'];
+		if($adminPassword != '' && $adminPassword == $post['confirmPassword']){
 			$adminPassword = md5($adminPassword);
-		}elseif($adminPassword != '' && $adminPassword != $_POST['confirmPassword']){
+		}elseif($adminPassword != '' && $adminPassword != $post['confirmPassword']){
 			$errors[] = $Translation['admin password mismatch'];
 		}else{
 			$adminPassword = $adminConfig['adminPassword'];
 		}
 
-		if(!isEmail($_POST['senderEmail'])){
+		if(!isEmail($post['senderEmail'])){
 			$errors[] = $Translation['invalid sender email'];
 		}
 
@@ -66,27 +70,34 @@
 			'dbDatabase' => config('dbDatabase'),
 
 			'adminConfig' => array(
-				'adminUsername' => strtolower(undo_magic_quotes($_POST['adminUsername'])),
+				'adminUsername' => strtolower($post['adminUsername']),
 				'adminPassword' => $adminPassword,
-				'notifyAdminNewMembers' => intval($_POST['notifyAdminNewMembers']),
-				'defaultSignUp' => intval($_POST['visitorSignup']),
-				'anonymousGroup' => undo_magic_quotes($_POST['anonymousGroup']),
-				'anonymousMember' => strtolower(undo_magic_quotes($_POST['anonymousMember'])),
-				'groupsPerPage' => (intval($_POST['groupsPerPage']) > 0 ? intval($_POST['groupsPerPage']) : $adminConfig['groupsPerPage']),
-				'membersPerPage' => (intval($_POST['membersPerPage']) > 0 ? intval($_POST['membersPerPage']) : $adminConfig['membersPerPage']),
-				'recordsPerPage' => (intval($_POST['recordsPerPage']) > 0 ? intval($_POST['recordsPerPage']) : $adminConfig['recordsPerPage']),
-				'custom1' => undo_magic_quotes($_POST['custom1']),
-				'custom2' => undo_magic_quotes($_POST['custom2']),
-				'custom3' => undo_magic_quotes($_POST['custom3']),
-				'custom4' => undo_magic_quotes($_POST['custom4']),
-				'MySQLDateFormat' => undo_magic_quotes($_POST['MySQLDateFormat']),
-				'PHPDateFormat' => undo_magic_quotes($_POST['PHPDateFormat']),
-				'PHPDateTimeFormat' => undo_magic_quotes($_POST['PHPDateTimeFormat']),
-				'senderName' => undo_magic_quotes($_POST['senderName']),
-				'senderEmail' => $_POST['senderEmail'],
-				'approvalSubject' => undo_magic_quotes($_POST['approvalSubject']),
-				'approvalMessage' => undo_magic_quotes($_POST['approvalMessage']),
-				'hide_twitter_feed' => ($_POST['hide_twitter_feed'] ? true : false)
+				'notifyAdminNewMembers' => intval($post['notifyAdminNewMembers']),
+				'defaultSignUp' => intval($post['visitorSignup']),
+				'anonymousGroup' => $post['anonymousGroup'],
+				'anonymousMember' => strtolower($post['anonymousMember']),
+				'groupsPerPage' => (intval($post['groupsPerPage']) > 0 ? intval($post['groupsPerPage']) : $adminConfig['groupsPerPage']),
+				'membersPerPage' => (intval($post['membersPerPage']) > 0 ? intval($post['membersPerPage']) : $adminConfig['membersPerPage']),
+				'recordsPerPage' => (intval($post['recordsPerPage']) > 0 ? intval($post['recordsPerPage']) : $adminConfig['recordsPerPage']),
+				'custom1' => $post['custom1'],
+				'custom2' => $post['custom2'],
+				'custom3' => $post['custom3'],
+				'custom4' => $post['custom4'],
+				'MySQLDateFormat' => $post['MySQLDateFormat'],
+				'PHPDateFormat' => $post['PHPDateFormat'],
+				'PHPDateTimeFormat' => $post['PHPDateTimeFormat'],
+				'senderName' => $post['senderName'],
+				'senderEmail' => $post['senderEmail'],
+				'approvalSubject' => $post['approvalSubject'],
+				'approvalMessage' => $post['approvalMessage'],
+				'hide_twitter_feed' => ($post['hide_twitter_feed'] ? true : false),
+				'maintenance_mode_message' => $post['maintenance_mode_message'],
+				'mail_function' => in_array($post['mail_function'], array('smtp', 'mail')) ? $post['mail_function'] : 'mail',
+				'smtp_server' => $post['smtp_server'],
+				'smtp_encryption' => in_array($post['smtp_encryption'], array('ssl', 'tls')) ? $post['smtp_encryption'] : '',
+				'smtp_port' => intval($post['smtp_port']) > 0 ? intval($post['smtp_port']) : 25,
+				'smtp_user' => $post['smtp_user'],
+				'smtp_pass' => $post['smtp_pass']
 			)
 		);
 
@@ -94,266 +105,264 @@
 		$save_result = save_config($new_config);
 		if($save_result === true){
 			// update admin member
-			sql( "update membership_users set memberID='$adminUsername', passMD5='$adminPassword', email='{$_POST['senderEmail']}', comments=concat_ws('', comments, '\\n', '".str_replace ( "<DATE>" , @date('Y-m-d') , $Translation['record updated automatically'] ) ."') where lcase(memberID)='" . makeSafe(strtolower($adminConfig['adminUsername'])) . "'" , $eo);
-			$_SESSION['memberID'] = $_SESSION['adminUsername'] = strtolower(undo_magic_quotes($_POST['adminUsername']));
+			sql( "update membership_users set memberID='$adminUsername', passMD5='$adminPassword', email='{$post['senderEmail']}', comments=concat_ws('', comments, '\\n', '".str_replace ( "<DATE>" , @date('Y-m-d') , $Translation['record updated automatically'] ) ."') where lcase(memberID)='" . makeSafe(strtolower($adminConfig['adminUsername'])) . "'" , $eo);
+			$_SESSION['memberID'] = $_SESSION['adminUsername'] = strtolower($post['adminUsername']);
 
 			// update anonymous group name if changed
-			if($adminConfig['anonymousGroup'] != undo_magic_quotes($_POST['anonymousGroup'])){
+			if($adminConfig['anonymousGroup'] != $post['anonymousGroup']){
 				sql("update membership_groups set name='$anonymousGroup' where name='" . addslashes($adminConfig['anonymousGroup']) . "'", $eo);
 			}
 
 			// update anonymous username if changed
-			if($adminConfig['anonymousMember'] != undo_magic_quotes($_POST['anonymousMember'])){
+			if($adminConfig['anonymousMember'] != $post['anonymousMember']){
 				sql("update membership_users set memberID='$anonymousMember' where memberID='" . addslashes($adminConfig['anonymousMember']) . "'", $eo);
 			}
 
 			// display status
-			echo "<div class=\"status\">{$Translation['admin settings saved']}</div>";
+			echo "<div class=\"alert alert-success\"><h2>{$Translation['admin settings saved']}</h2></div>";
 		}else{
 			// display status
-			echo "<div class=\"alert alert-danger\">".str_replace ( '<ERROR>' , $save_result['error'] , $Translation['admin settings not saved'] )."</div>";
+			echo "<div class=\"alert alert-danger\"><h2>" . str_replace('<ERROR>', $save_result['error'], $Translation['admin settings not saved']) . "</h2></div>";
 		}
 
 		// exit
 		include("{$currDir}/incFooter.php");
-	}    
+	}
+
+	function settings_textbox($name, $label, $value, $hint = '', $type = 'text'){
+		ob_start();
+		?>
+		<div class="form-group">
+			<label for="<?php echo $name; ?>" class="col-sm-4 col-md-3 col-lg-2 col-lg-offset-2 control-label"><?php echo $label; ?></label>
+			<div class="col-sm-8 col-md-9 col-lg-6">
+				<input type="<?php echo $type; ?>" name="<?php echo $name; ?>" id="<?php echo $name; ?>" value="<?php echo html_attr($value); ?>" class="form-control">
+				<?php if($hint){ ?>
+					<span class="help-block"><?php echo $hint; ?></span>
+				<?php } ?>
+			</div>
+		</div>
+		<?php
+		$out = ob_get_contents();
+		ob_end_clean();
+
+		return $out;
+	}
+
+	function settings_textarea($name, $label, $value, $height = 6, $hint = ''){
+		ob_start();
+		?>
+		<div class="form-group">
+			<label for="<?php echo $name; ?>" class="col-sm-4 col-md-3 col-lg-2 col-lg-offset-2 control-label"><?php echo $label; ?></label>
+			<div class="col-sm-8 col-md-9 col-lg-6">
+				<textarea rows="<?php echo abs($height); ?>" name="<?php echo $name; ?>" id="<?php echo $name; ?>" class="form-control"><?php echo html_attr(str_replace(array('\r', '\n'), array("", "\n"), $value)); ?></textarea>
+				<?php if($hint){ ?>
+					<span class="help-block"><?php echo $hint; ?></span>
+				<?php } ?>
+			</div>
+		</div>
+		<?php
+		$out = ob_get_contents();
+		ob_end_clean();
+
+		return $out;
+	}
+
+	function settings_radiogroup($name, $label, $value, $options){
+		ob_start();
+		?>
+		<div class="form-group">
+			<label class="col-sm-4 col-md-3 col-lg-2 col-lg-offset-2 control-label"><?php echo $label; ?></label>
+			<div class="col-sm-8 col-md-9 col-lg-6">
+				<?php foreach($options as $val => $display){ ?>
+					<div class="radio">
+						<label>
+							<input type="radio" 
+								name="<?php echo $name; ?>" 
+								id="<?php echo $name; ?><?php echo html_attr($val); ?>" 
+								value="<?php echo html_attr($val); ?>" 
+								<?php if($value == $val){ ?>checked<?php } ?>
+							>
+							<?php echo $display; ?>
+						</label>
+					</div>
+				<?php } ?>
+			</div>
+		</div>
+		<?php
+		$out = ob_get_contents();
+		ob_end_clean();
+
+		return $out;
+	}
+
+	function settings_checkbox($name, $label, $value, $set_value, $hint = ''){
+		ob_start();
+		?>
+		<div class="form-group">
+			<label class="col-sm-4 col-md-3 col-lg-2 col-lg-offset-2 control-label"></label>
+			<div class="col-sm-8 col-md-9 col-lg-6">
+				<div class="checkbox">
+					<label>
+						<input type="checkbox" 
+							name="<?php echo $name; ?>" 
+							id="<?php echo $name; ?>" 
+							value="<?php echo html_attr($value); ?>" 
+							<?php if($value == $set_value){ ?>checked<?php } ?>
+						>
+						<?php echo $label; ?>
+					</label>
+				</div>
+				<?php if($hint){ ?>
+					<span class="help-block"><?php echo $hint; ?></span>
+				<?php } ?>
+			</div>
+		</div>
+		<?php
+		$out = ob_get_contents();
+		ob_end_clean();
+
+		return $out;
+	}
 
 ?>
 
-<div class="page-header"><h1><?php echo $Translation["admin settings"] ; ?></h1></div>
+<div class="page-header"><h1><?php echo $Translation['admin settings'] ; ?></h1></div>
 
-<form method="post" action="pageSettings.php">
+<form method="post" action="pageSettings.php" class="form-horizontal">
 	<?php echo csrf_token(); ?>
-	<table class="table table-striped">
-		<tr><td align="center" colspan="2" class="tdFormCaption"><input type="checkbox" id="showToolTips" value="1" checked><label for="showToolTips"><?php echo $Translation['show tool tips'] ; ?></label></td></tr>
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['admin username'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="text" name="adminUsername" id="adminUsername" value="<?php echo htmlspecialchars($adminConfig['adminUsername']); ?>" size="20" class="formTextBox">
-				</td>
-			</tr>
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['admin password'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="password" autocomplete="off" name="adminPassword" id="adminPassword" value="" size="20" class="formTextBox">
-				<br><?php echo $Translation['change admin password'] ; ?>
-				</td>
-			</tr>
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation["confirm password"] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="password" autocomplete="off" name="confirmPassword" id="confirmPassword" value="" size="20" class="formTextBox">
-				</td>
-			</tr>
 
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['sender email'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="text" name="senderEmail" id="senderEmail" value="<?php echo htmlspecialchars($adminConfig['senderEmail']); ?>" size="40" class="formTextBox">
-				<br><?php echo $Translation['sender name and email'] ; ?> 
-				<br><?php echo $Translation['email messages'] ; ?>
-				</td>
-			</tr>
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['admin notifications'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<?php
-					echo htmlRadioGroup(
-						"notifyAdminNewMembers",
-						array(0, 1, 2),
-						array(
-							$Translation['no email notifications'] ,
-							$Translation['member waiting approval'] ,
-							$Translation['new sign-ups']  
-						),
-						intval($adminConfig['notifyAdminNewMembers'])
-					);
-				?>
-				</td>
-			</tr>
+	<?php echo settings_textbox('adminUsername', $Translation['admin username'], $adminConfig['adminUsername']); ?>
+	<?php echo settings_textbox('adminPassword', $Translation['admin password'], '', $Translation['change admin password'], 'password'); ?>
+	<?php echo settings_textbox('confirmPassword', $Translation['confirm password'], '', '', 'password'); ?>
 
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['sender name'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="text" name="senderName" id="senderName" value="<?php echo htmlspecialchars($adminConfig['senderName']); ?>" size="40" class="formTextBox">
-				</td>
-			</tr>
+	<?php
+		echo settings_radiogroup(
+			'notifyAdminNewMembers', 
+			$Translation['admin notifications'], 
+			intval($adminConfig['notifyAdminNewMembers']), 
+			array(
+				0 => $Translation['no email notifications'],
+				1 => $Translation['member waiting approval'],
+				2 => $Translation['new sign-ups']
+			)
+		); 
+	?>
 
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['members custom field 1'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="text" name="custom1" id="custom1" value="<?php echo htmlspecialchars($adminConfig['custom1']); ?>" size="20" class="formTextBox">
-				</td>
-			</tr>
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['members custom field 2'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="text" name="custom2" id="custom2" value="<?php echo htmlspecialchars($adminConfig['custom2']); ?>" size="20" class="formTextBox">
-				</td>
-			</tr>
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['members custom field 3'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="text" name="custom3" id="custom3" value="<?php echo htmlspecialchars($adminConfig['custom3']); ?>" size="20" class="formTextBox">
-				</td>
-			</tr>
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['members custom field 4'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="text" name="custom4" id="custom4" value="<?php echo htmlspecialchars($adminConfig['custom4']); ?>" size="20" class="formTextBox">
-				</td>
-			</tr>
+	<?php echo settings_textbox('custom1', $Translation['members custom field 1'], $adminConfig['custom1']); ?>
+	<?php echo settings_textbox('custom2', $Translation['members custom field 2'], $adminConfig['custom2']); ?>
+	<?php echo settings_textbox('custom3', $Translation['members custom field 3'], $adminConfig['custom3']); ?>
+	<?php echo settings_textbox('custom4', $Translation['members custom field 4'], $adminConfig['custom4']); ?>
 
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['member approval email subject'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="text" name="approvalSubject" id="approvalSubject" value="<?php echo htmlspecialchars($adminConfig['approvalSubject']); ?>" size="40" class="formTextBox">
-				<br><?php echo $Translation['member approval email subject control'] ; ?>
-				</td>
-			</tr>
+	<?php echo settings_textbox('approvalSubject', $Translation['member approval email subject'], $adminConfig['approvalSubject'], $Translation['member approval email subject control']); ?>
+	<?php echo settings_textarea('approvalMessage', $Translation['member approval email message'], $adminConfig['approvalMessage']); ?>
 
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['member approval email message'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<textarea wrap="virtual" name="approvalMessage" cols="60" rows="6" class="formTextBox"><?php echo htmlspecialchars(str_replace(array('\r', '\n'), array("", "\n"), $adminConfig['approvalMessage'])); ?></textarea>
-				</td>
-			</tr>
+	<?php echo settings_textbox('MySQLDateFormat', $Translation['MySQL date'], $adminConfig['MySQLDateFormat'], $Translation['MySQL reference']); ?>
+	<?php echo settings_textbox('PHPDateFormat', $Translation['PHP short date'], $adminConfig['PHPDateFormat'], $Translation['PHP manual']); ?>
+	<?php echo settings_textbox('PHPDateTimeFormat', $Translation['PHP long date'], $adminConfig['PHPDateTimeFormat'], $Translation['PHP manual']); ?>
 
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['MySQL date'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="text" name="MySQLDateFormat" id="MySQLDateFormat" value="<?php echo htmlspecialchars($adminConfig['MySQLDateFormat']); ?>" size="30" class="formTextBox">
-				<br><?php echo $Translation['MySQL reference'] ; ?>
-				</td>
-			</tr>
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['PHP short date'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="text" name="PHPDateFormat" id="PHPDateFormat" value="<?php echo htmlspecialchars($adminConfig['PHPDateFormat']); ?>" size="30" class="formTextBox">
-				<br><?php echo $Translation['PHP manual'] ; ?> 
-				</td>
-			</tr>
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['PHP long date'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="text" name="PHPDateTimeFormat" id="PHPDateTimeFormat" value="<?php echo htmlspecialchars($adminConfig['PHPDateTimeFormat']); ?>" size="30" class="formTextBox">
-				<br><?php echo $Translation['PHP manual'] ; ?>
-				</td>
-			</tr>
+	<?php echo settings_textbox('groupsPerPage', $Translation['groups per page'], $adminConfig['groupsPerPage']); ?>
+	<?php echo settings_textbox('membersPerPage', $Translation['members per page'], $adminConfig['membersPerPage']); ?>
+	<?php echo settings_textbox('recordsPerPage', $Translation['records per page'], $adminConfig['recordsPerPage']); ?>
 
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['groups per page'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="text" name="groupsPerPage" id="groupsPerPage" value="<?php echo htmlspecialchars($adminConfig['groupsPerPage']); ?>" size="5" class="formTextBox">
-				</td>
-			</tr>
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['members per page'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="text" name="membersPerPage" id="membersPerPage" value="<?php echo intval($adminConfig['membersPerPage']); ?>" size="5" class="formTextBox">
-				</td>
-			</tr>
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['records per page'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="text" name="recordsPerPage" id="recordsPerPage" value="<?php echo intval($adminConfig['recordsPerPage']); ?>" size="5" class="formTextBox">
-				</td>
-			</tr>
+	<?php
+		echo settings_radiogroup(
+			'visitorSignup', 
+			$Translation['default sign-up mode'], 
+			intval($adminConfig['defaultSignUp']), 
+			array(
+				0 => $Translation['no sign-up allowed'],
+				1 => $Translation['admin approve members'],
+				2 => $Translation['automatically approve members']
+			)
+		); 
+	?>
 
+	<?php echo settings_textbox('anonymousGroup', $Translation['anonymous group'], $adminConfig['anonymousGroup']); ?>
+	<?php echo settings_textbox('anonymousMember', $Translation['anonymous user name'], $adminConfig['anonymousMember']); ?>
 
+	<?php echo settings_checkbox('hide_twitter_feed', $Translation['hide twitter feed'], '1', $adminConfig['hide_twitter_feed'], $Translation['twitter feed']); ?>
+	<?php echo settings_textarea('maintenance_mode_message', $Translation['maintenance mode message'], $adminConfig['maintenance_mode_message']); ?>
 
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['default sign-up mode'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<?php
-					echo htmlRadioGroup(
-						"visitorSignup",
-						array(0, 1, 2),
-						array(
-							$Translation['no sign-up allowed'] ,
-							$Translation['admin approve members'],
-							$Translation['automatically approve members'] 
-						),
-						intval($adminConfig['defaultSignUp'])
-					);
-				?>
-				</td>
-			</tr>
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['anonymous group'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="text" name="anonymousGroup" id="anonymousGroup" value="<?php echo htmlspecialchars($adminConfig['anonymousGroup']); ?>" size="30" class="formTextBox">
-				</td>
-			</tr>
+	<hr>
+	<div id="mail-settings" style="height: 5em;"></div>
 
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['anonymous user name'] ; ?></div>
-				</td>
-			<td align="left" class="tdFormInput">
-				<input type="text" name="anonymousMember" id="anonymousMember" value="<?php echo htmlspecialchars($adminConfig['anonymousMember']); ?>" size="30" class="formTextBox">
-				</td>
-			</tr>
+	<?php echo settings_textbox('senderEmail', $Translation['sender email'], $adminConfig['senderEmail'], $Translation['sender name and email'] . ' ' . $Translation['email messages']); ?>
+	<?php echo settings_textbox('senderName', $Translation['sender name'], $adminConfig['senderName']); ?>
+	<?php
+		echo settings_radiogroup(
+			'mail_function', 
+			$Translation['mail_function'], 
+			thisOr($adminConfig['mail_function'], 'mail'), 
+			array(
+				'mail' => 'PHP mail()',
+				'smtp' => 'SMTP'
+			)
+		); 
+	?>
+	<?php echo settings_textbox('smtp_server', $Translation['smtp_server'], $adminConfig['smtp_server']); ?>
+	<?php
+		echo settings_radiogroup(
+			'smtp_encryption', 
+			$Translation['smtp_encryption'], 
+			$adminConfig['smtp_encryption'], 
+			array(
+				'' => $Translation['none'],
+				'ssl' => 'SSL',
+				'tls' => 'TLS'
+			)
+		); 
+	?>
+	<?php echo settings_textbox('smtp_port', $Translation['smtp_port'], $adminConfig['smtp_port'], $Translation['smtp_port_hint']); ?>
+	<?php echo settings_textbox('smtp_user', $Translation['smtp_user'], $adminConfig['smtp_user']); ?>
+	<?php echo settings_textbox('smtp_pass', $Translation['smtp_pass'], $adminConfig['smtp_pass'], '', 'password'); ?>
 
-		<tr>
-			<td align="right" class="tdFormCaption" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation['hide twitter feed'] ; ?></div>
-			</td>
-			<td align="left" class="tdFormInput">
-				<input type="checkbox" name="hide_twitter_feed" id="hide_twitter_feed" value="1" <?php echo ($adminConfig['hide_twitter_feed'] ? 'checked' : ''); ?>>
-				<div class="text-info"><?php echo $Translation['twitter feed'] ; ?></div>
-			</td>
-		</tr>
+	<div class="form-group">
+		<label class="col-sm-4 col-md-3 col-lg-2 col-lg-offset-2 control-label"></label>
+		<div class="col-sm-8 col-md-9 col-lg-6">
+			<button type="submit" name="saveChanges" value="1" onclick="return jsValidateAdminSettings();" class="btn btn-primary btn-lg"><i class="glyphicon glyphicon-ok"></i> <?php echo $Translation['save changes']; ?></button>
+			<a href="pageSettings.php" class="btn btn-warning btn-lg hspacer-md"><i class="glyphicon glyphicon-remove"></i> <?php echo $Translation['cancel']; ?></a>
+		</div>
+	</div>
 
-		<tr>
-			<td colspan="2" align="right" class="tdFormFooter">
-				<input type="submit" name="saveChanges" value="<?php echo $Translation["save changes"] ; ?>" onClick="return jsValidateAdminSettings();">
-				</td>
-			</tr>
-		</table>
 </form>
 
 <div style="height: 600px;"></div>
+
+<style>
+	.form-group{
+		margin-bottom: 1.5em;
+	}
+</style>
+
+<script>
+	$j(function(){
+		// circumvent browser auto-completion of password field
+		setTimeout(function(){ $j('#adminPassword').val(''); }, 500);
+
+		// hide/show SMTP settings based on mail_function value
+		var mail_function_observer = function(){
+			var mail_function = 'mail';
+			if($j('#mail_functionsmtp').prop('checked')) mail_function = 'smtp';
+
+			if(mail_function == 'smtp'){
+				$j('#smtp_server, #smtp_port, #smtp_user, #smtp_pass, [name=smtp_encryption]')
+					.prop('readonly', false)
+					.removeClass('text-muted bg-muted')
+					.parents('.form-group')
+					.removeClass('text-muted');
+			}else{
+				$j('#smtp_server, #smtp_port, #smtp_user, #smtp_pass, [name=smtp_encryption]')
+					.prop('readonly', true)
+					.addClass('text-muted bg-muted')
+					.parents('.form-group')
+					.addClass('text-muted');
+			}
+		};
+
+		$j('#mail_functionsmtp, #mail_functionmail').click(mail_function_observer);
+		mail_function_observer();
+	});
+</script>
 
 <?php
 	include("{$currDir}/incFooter.php");

@@ -1,6 +1,7 @@
 <?php
 	$currDir = dirname(__FILE__);
 	require("{$currDir}/incCommon.php");
+	$GLOBALS['page_title'] = $Translation['membership management homepage'];
 	include("{$currDir}/incHeader.php");
 ?>
 
@@ -35,13 +36,54 @@
 	}
 ?>
 
-<div class="page-header"><h1><?php echo $Translation["membership management homepage"]; ?></h1></div>
+<div class="page-header"><h1><?php echo $Translation['membership management homepage']; ?></h1></div>
 
 <?php if(!$adminConfig['hide_twitter_feed']){ ?>
 	<div class="row" id="outer-row"><div class="col-md-8">
 <?php } ?>
 
 <div class="row" id="inner-row">
+
+<!-- ################# Maintenance mode ###################### -->
+<?php
+	if(maintenance_mode()){
+		$off_classes = 'btn-default locked_inactive';
+		$on_classes = 'btn-danger unlocked_active';
+	}else{
+		$off_classes = 'btn-success locked_active';
+		$on_classes = 'btn-default unlocked_inactive';
+	}
+?>
+<div class="col-md-12 text-right vspacer-lg">
+	<label><?php echo $Translation['maintenance mode']; ?></label>
+	<div class="btn-group" id="toggle_maintenance_mode">
+		<button type="button" class="btn <?php echo $off_classes; ?>"><?php echo $Translation['OFF']; ?></button>
+		<button type="button" class="btn <?php echo $on_classes; ?>"><?php echo $Translation['ON']; ?></button>
+	</div>
+</div>
+<script>
+	$j('#toggle_maintenance_mode button').click(function(){
+		if($j(this).hasClass('locked_active') || $j(this).hasClass('unlocked_inactive')){
+			if(confirm('<?php echo html_attr($Translation['enable maintenance mode?']); ?>')){
+				$j.ajax({
+					url: 'ajax-maintenance-mode.php?status=on', 
+					complete: function(){
+						location.reload();
+					}
+				});
+			}
+		}else{
+			if(confirm('<?php echo html_attr($Translation['disable maintenance mode?']); ?>')){
+				$j.ajax({
+					url: 'ajax-maintenance-mode.php?status=off', 
+					complete: function(){
+						location.reload();
+					}
+				});
+			}
+		}
+	});
+</script>
 
 <!-- ################# Newest Updates ######################## -->
 <div class="col-md-6">
@@ -50,15 +92,15 @@
 		<h3 class="panel-title"><?php echo $Translation["newest updates"]; ?> <a class="btn btn-default btn-sm" href="pageViewRecords.php?sort=dateUpdated&sortDir=desc"><i class="glyphicon glyphicon-chevron-right"></i></a></h3>
 	</div>
 	<div class="panel-body">
-	<table class="table table-striped">
+	<table class="table table-striped table-hover">
 	<?php
 		$res=sql("select tableName, pkValue, dateUpdated, recID from membership_userrecords order by dateUpdated desc limit 5", $eo);
 		while($row=db_fetch_row($res)){
 			?>
 			<tr>
-				<td class="tdCaptionCell"><?php echo @date($adminConfig['PHPDateTimeFormat'], $row[2]); ?></td>
-				<td class="tdCell" align="left"><a href="pageEditOwnership.php?recID=<?php echo $row[3]; ?>"><img src="images/data_icon.gif" border="0" alt="<?php echo $Translation["view record details"]; ?>" title="<?php echo $Translation["view record details"]; ?>"></a> <?php echo substr(getCSVData($row[0], $row[1]), 0, 15); ?> ...</td>
-				</tr>
+				<th style="min-width: 13em;"><?php echo @date($adminConfig['PHPDateTimeFormat'], $row[2]); ?></th>
+				<td class="remaining-width"><div class="clipped"><a href="pageEditOwnership.php?recID=<?php echo $row[3]; ?>"><img src="images/data_icon.gif" border="0" alt="<?php echo $Translation["view record details"]; ?>" title="<?php echo $Translation["view record details"]; ?>"></a> <?php echo getCSVData($row[0], $row[1]); ?></div></td>
+			</tr>
 			<?php
 		}
 	?>
@@ -76,15 +118,15 @@
 		<h3 class="panel-title"><?php echo $Translation["newest entries"]; ?> <a class="btn btn-default btn-sm" href="pageViewRecords.php?sort=dateAdded&sortDir=desc"><i class="glyphicon glyphicon-chevron-right"></i></a></h3>
 	</div>
 	<div class="panel-body">
-	<table class="table table-striped">
+	<table class="table table-striped table-hover">
 	<?php
 		$res=sql("select tableName, pkValue, dateAdded, recID from membership_userrecords order by dateAdded desc limit 5", $eo);
 		while($row=db_fetch_row($res)){
 			?>
 			<tr>
-				<td class="tdCaptionCell"><?php echo @date($adminConfig['PHPDateTimeFormat'], $row[2]); ?></td>
-				<td class="tdCell" align="left"><a href="pageEditOwnership.php?recID=<?php echo $row[3]; ?>"><img src="images/data_icon.gif" border="0" alt="<?php echo $Translation["view record details"]; ?>" title="<?php echo $Translation["view record details"]; ?>"></a> <?php echo substr(getCSVData($row[0], $row[1]), 0, 15); ?> ...</td>
-				</tr>
+				<th style="min-width: 13em;"><?php echo @date($adminConfig['PHPDateTimeFormat'], $row[2]); ?></th>
+				<td class="remaining-width"><div class="clipped"><a href="pageEditOwnership.php?recID=<?php echo $row[3]; ?>"><img src="images/data_icon.gif" border="0" alt="<?php echo $Translation["view record details"]; ?>" title="<?php echo $Translation["view record details"]; ?>"></a> <?php echo getCSVData($row[0], $row[1]); ?></div></td>
+			</tr>
 			<?php
 		}
 	?>
@@ -95,61 +137,6 @@
 <!-- ####################################################### -->
 
 
-<!-- ################# Add-ons available ######################## -->
-	<?php
-		// do we have a cache file that was recently updated?
-		$addOnsCache = "{$currDir}/add-ons.cache";
-		$addOnXML = '';
-		if(is_file($addOnsCache) && filemtime($addOnsCache) >= (time() - 86400 * 2)){
-			// read feed from cache
-			$addOnXML = @file_get_contents($addOnsCache);
-		}else{
-			// read live feed and store to cache
-			$addOnXML = @file_get_contents('http://bigprof.com/appgini/taxonomy/term/6/0/feed');
-			@file_put_contents($addOnsCache, $addOnXML);
-			clearstatcache();
-		}
-
-		$xml = @simplexml_load_string($addOnXML);
-		if(count($xml->channel->item)){
-			?>
-		<div class="col-md-6">
-		<div class="panel panel-info">
-			<div class="panel-heading">
-				<h3 class="panel-title"><?php echo $Translation["available add-ons"]; ?></h3>
-			</div>
-			<div class="panel-body">
-			<table class="table table-striped">
-			<?php
-				$addOnId = 0;
-				foreach($xml->channel->item as $indx => $data){
-					$addOnId++; if($addOnId > 10) break;
-					?>
-					<tr>
-						<td>
-							<?php echo (strtotime($data->pubDate) > (@time() - 60 * 24 * 60 * 60) ? '<img src="../new.png" align="top" /> ' : ''); ?><a href="#" onclick="return showDialog('add-on-<?php echo $addOnId; ?>');"><?php echo $data->title; ?></a><br/>
-							<div class="dialog-box hidden-block" id="add-on-<?php echo $addOnId; ?>">
-								<h3><a href="<?php echo $data->link; ?>" target="_blank"><?php echo $data->title; ?></a></h3>
-								<p><?php echo $data->description; ?></p>
-								<div align="right">
-									[<a href="<?php echo $data->link; ?>" target="_blank"><?php echo $Translation["more info"]; ?></a>]
-									[<a onclick="return hideDialogs();" href="#" target="_blank"><?php echo $Translation["close"]; ?></a>]
-								</div>
-							</div>
-						</td>
-					</tr>
-					<?php
-				}
-			?>
-				<tr><td class="text-center"><a href="http://bigprof.com/appgini/add-ons" target="_blank"><?php echo $Translation["view add-ons"]; ?></a></td></tr>
-			</table>
-			</div>
-		</div>
-		</div>
-			<?php
-		}
-	?>
-<!-- ####################################################### -->
 
 
 <!-- ################# Top Members ######################## -->
@@ -159,15 +146,15 @@
 		<h3 class="panel-title"><?php echo $Translation["top members"]; ?></h3>
 	</div>
 	<div class="panel-body">
-	<table class="table table-striped">
+	<table class="table table-striped table-hover">
 	<?php
 		$res=sql("select lcase(memberID), count(1) from membership_userrecords group by memberID order by 2 desc limit 5", $eo);
 		while($row=db_fetch_row($res)){
 			?>
 			<tr>
-				<td class="tdCaptionCell" align="left"><a href="pageEditMember.php?memberID=<?php echo urlencode($row[0]); ?>"><img src="images/edit_icon.gif" border="0" alt="<?php echo $Translation["edit member details"]; ?>" title="<?php echo $Translation["edit member details"]; ?>"></a> <?php echo $row[0]; ?></td>
-				<td class="tdCell"><a href="pageViewRecords.php?memberID=<?php echo urlencode($row[0]); ?>"><img src="images/data_icon.gif" border="0" alt="<?php echo $Translation["view member records"]; ?>" title="<?php echo $Translation["view member records"]; ?>"></a> <?php echo $row[1]; ?> <?php echo $Translation["records"]; ?></td>
-				</tr>
+				<th class="" style="max-width: 10em;"><a href="pageEditMember.php?memberID=<?php echo urlencode($row[0]); ?>" title="<?php echo $Translation["edit member details"]; ?>"><i class="glyphicon glyphicon-pencil"></i> <?php echo $row[0]; ?></a></th>
+				<td class="remaining-width"><a href="pageViewRecords.php?memberID=<?php echo urlencode($row[0]); ?>"><img src="images/data_icon.gif" border="0" alt="<?php echo $Translation["view member records"]; ?>" title="<?php echo $Translation["view member records"]; ?>"></a> <?php echo $row[1]; ?> <?php echo $Translation["records"]; ?></td>
+			</tr>
 			<?php
 		}
 	?>
@@ -185,29 +172,29 @@
 		<h3 class="panel-title"><?php echo $Translation["members stats"]; ?></h3>
 	</div>
 	<div class="panel-body">
-	<table class="table table-striped">
+	<table class="table table-striped table-hover">
 		<tr>
-			<td class="tdCaptionCell"><?php echo $Translation["total groups"]; ?></td>
-			<td class="tdCell"><a href="pageViewGroups.php"><img src="images/view_icon.gif" border="0" alt="<?php echo $Translation['view groups']; ?>" title="<?php echo $Translation['view groups']; ?>"></a> <?php echo sqlValue("select count(1) from membership_groups"); ?></td>
+			<th class=""><?php echo $Translation["total groups"]; ?></th>
+			<td class="remaining-width"><a href="pageViewGroups.php"title="<?php echo $Translation['view groups']; ?>"><i class="glyphicon glyphicon-search"></i> <?php echo sqlValue("select count(1) from membership_groups"); ?></a></td>
 			</tr>
 		<tr>
-			<td class="tdCaptionCell"><?php echo $Translation["active members"]; ?></td>
-			<td class="tdCell"><a href="pageViewMembers.php?status=2"><img src="images/view_icon.gif" border="0" alt="<?php echo $Translation["view active members"]; ?>" title="<?php echo $Translation["view active members"]; ?>"></a> <?php echo sqlValue("select count(1) from membership_users where isApproved=1 and isBanned=0"); ?></td>
+			<th class=""><?php echo $Translation["active members"]; ?></th>
+			<td class="remaining-width"><a href="pageViewMembers.php?status=2" title="<?php echo $Translation["view active members"]; ?>"><i class="glyphicon glyphicon-search"></i> <?php echo sqlValue("select count(1) from membership_users where isApproved=1 and isBanned=0"); ?></a></td>
 			</tr>
 		<tr>
 			<?php
 				$awaiting = intval(sqlValue("select count(1) from membership_users where isApproved=0"));
 			?>
-			<td class="tdCaptionCell" <?php echo ($awaiting ? "style=\"color: red;\"" : ""); ?>><?php echo $Translation["members awaiting approval"]; ?></td>
-			<td class="tdCell"><a href="pageViewMembers.php?status=1"><img src="images/view_icon.gif" border="0" alt="<?php echo $Translation["view members awaiting approval"]; ?>" title="<?php echo $Translation["view members awaiting approval"]; ?>"></a> <?php echo $awaiting; ?></td>
+			<th class="" <?php echo ($awaiting ? "style=\"color: red;\"" : ""); ?>><?php echo $Translation["members awaiting approval"]; ?></th>
+			<td class="remaining-width"><a href="pageViewMembers.php?status=1" title="<?php echo $Translation["view members awaiting approval"]; ?>"><i class="glyphicon glyphicon-search"></i> <?php echo $awaiting; ?></a></td>
 			</tr>
 		<tr>
-			<td class="tdCaptionCell"><?php echo $Translation["banned members"]; ?></td>
-			<td class="tdCell"><a href="pageViewMembers.php?status=3"><img src="images/view_icon.gif" border="0" alt="<?php echo $Translation["view banned members"]; ?>" title="<?php echo $Translation["view banned members"]; ?>"></a> <?php echo sqlValue("select count(1) from membership_users where isApproved=1 and isBanned=1"); ?></td>
+			<th class=""><?php echo $Translation["banned members"]; ?></th>
+			<td class="remaining-width"><a href="pageViewMembers.php?status=3" title="<?php echo $Translation["view banned members"]; ?>"><i class="glyphicon glyphicon-search"></i> <?php echo sqlValue("select count(1) from membership_users where isApproved=1 and isBanned=1"); ?></a></td>
 			</tr>
 		<tr>
-			<td class="tdCaptionCell"><?php echo $Translation["total members"]; ?></td>
-			<td class="tdCell"><a href="pageViewMembers.php"><img src="images/view_icon.gif" border="0" alt="<?php echo $Translation["view all members"]; ?>" title="<?php echo $Translation["view all members"]; ?>"></a> <?php echo sqlValue("select count(1) from membership_users"); ?></td>
+			<th class=""><?php echo $Translation["total members"]; ?></th>
+			<td class="remaining-width"><a href="pageViewMembers.php" title="<?php echo $Translation["view all members"]; ?>"><i class="glyphicon glyphicon-search"></i> <?php echo sqlValue("select count(1) from membership_users"); ?></a></td>
 			</tr>
 		</table>
 	</div>
@@ -258,7 +245,21 @@
 	</div> <!-- /div.row#outer-row -->
 <?php } ?>
 
+<script>
+	$j(function(){
+		$j(window).resize(function(){
+			$j('.remaining-width').each(function(){
+				var panel_width = $j(this).parents('.panel-body').width();
+				var other_cell_width = $j(this).prev().width();
+
+				$j(this).attr('style', 'max-width: ' + (panel_width * .9 - other_cell_width) + 'px !important;');
+			});
+		}).resize();
+	})
+</script>
+
 
 <?php
 	include("{$currDir}/incFooter.php");
 ?>
+

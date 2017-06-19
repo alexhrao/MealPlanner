@@ -1,6 +1,14 @@
-<!-- Edit this file to change the layout of the highlighted record in the table view -->
-		<td id="recipes-Name-<%%VALUE(RecipeID)%%>" class=""><%%VALUE(Name)%%></td>
-		<td id="recipes-DateCreated-<%%VALUE(RecipeID)%%>" class=""><%%VALUE(DateCreated)%%></td>
-		<td id="recipes-Instructions-<%%VALUE(RecipeID)%%>" class=""><%%VALUE(Instructions)%%></td>
-		<td id="recipes-Description-<%%VALUE(RecipeID)%%>" class=""><%%VALUE(Description)%%></td>
-		<td id="recipes-SourceID-<%%VALUE(RecipeID)%%>" class="text-right"><%%VALUE(SourceID)%%></td>
+<!-- Edit this file to change the layout of each record in the table view -->
+<!-- To disable clicking of a field, remove the  and  formatters around it-->
+
+<!-- If you wish to hide the table view header that contains the column titles, -->
+<!-- add the following to the recipes_init() hook (in hooks/recipes.php file) -->
+<!--     $options->ShowTableHeader = 0;     -->
+
+		<td id="recipes-Name-<%%VALUE(RecipeID)%%>" class="recipes-Name"><%%VALUE(Name)%%></td>
+		<td id="recipes-DateCreated-<%%VALUE(RecipeID)%%>" class="recipes-DateCreated"><%%VALUE(DateCreated)%%></td>
+		<td id="recipes-Instructions-<%%VALUE(RecipeID)%%>" class="recipes-Instructions"><%%VALUE(Instructions)%%></td>
+		<td id="recipes-Description-<%%VALUE(RecipeID)%%>" class="recipes-Description"><%%VALUE(Description)%%></td>
+		<td id="recipes-SourceID-<%%VALUE(RecipeID)%%>" class="recipes-SourceID text-right"><%%VALUE(SourceID)%%></td>
+		<td id="recipes-PrepTime-<%%VALUE(RecipeID)%%>" class="recipes-PrepTime"><%%VALUE(PrepTime)%%></td>
+		<td id="recipes-Servings-<%%VALUE(RecipeID)%%>" class="recipes-Servings text-right"><%%VALUE(Servings)%%></td>

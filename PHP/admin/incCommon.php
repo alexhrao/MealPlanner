@@ -14,6 +14,9 @@
 
 	$adminConfig = config('adminConfig');
 	include("{$currDir}/incFunctions.php");
+	@include_once("{$currDir}/../hooks/__global.php");
+	include("{$currDir}/../language.php");
+	include("{$currDir}/../defaultLang.php");
 	include("{$currDir}/../language-admin.php");
 
 	/* trim $_POST, $_GET, $_REQUEST */

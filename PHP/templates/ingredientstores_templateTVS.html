@@ -1,4 +1,10 @@
-<!-- Edit this file to change the layout of the highlighted record in the table view -->
-		<td id="ingredientstores-IngredientID-<%%VALUE(IngredientStoreID)%%>" class="text-right"><%%VALUE(IngredientID)%%></td>
-		<td id="ingredientstores-StoreID-<%%VALUE(IngredientStoreID)%%>" class="text-right"><%%VALUE(StoreID)%%></td>
-		<td id="ingredientstores-Cost-<%%VALUE(IngredientStoreID)%%>" class="text-right"><%%VALUE(Cost)%%></td>
+<!-- Edit this file to change the layout of each record in the table view -->
+<!-- To disable clicking of a field, remove the  and  formatters around it-->
+
+<!-- If you wish to hide the table view header that contains the column titles, -->
+<!-- add the following to the ingredientstores_init() hook (in hooks/ingredientstores.php file) -->
+<!--     $options->ShowTableHeader = 0;     -->
+
+		<td id="ingredientstores-IngredientID-<%%VALUE(IngredientStoreID)%%>" class="ingredientstores-IngredientID text-right"><%%VALUE(IngredientID)%%></td>
+		<td id="ingredientstores-StoreID-<%%VALUE(IngredientStoreID)%%>" class="ingredientstores-StoreID text-right"><%%VALUE(StoreID)%%></td>
+		<td id="ingredientstores-Cost-<%%VALUE(IngredientStoreID)%%>" class="ingredientstores-Cost text-right"><%%VALUE(Cost)%%></td>

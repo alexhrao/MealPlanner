@@ -18,7 +18,7 @@
 			<fieldset class="form-horizontal">
 
 				<div class="form-group">
-					<label for="MealID" class="control-label col-lg-3" data-parent_link="view_parent_modal">Meal<span class="text-danger"><%%TRANSLATION(*)%%></span> <button class="btn btn-info btn-xs vspacer-sm" type="button" data-toggle="collapse" tabindex="-1" data-target="#MealID-description"><i class="glyphicon glyphicon-info-sign"></i></button></label>
+					<label for="MealID" class="control-label col-lg-3" data-parent_link="view_parent_modal">Meal<span class="text-danger"><%%TRANSLATION(*)%%></span> <i class="glyphicon glyphicon-info-sign text-info" data-toggle="collapse" data-target="#MealID-description"></i></label>
 					<div class="col-lg-9">
 						<span class="help-block collapse" id="MealID-description"><div class="alert alert-info">What meal would you like to refer to?</div></span>
 
@@ -27,7 +27,7 @@
 				</div>
 
 				<div class="form-group">
-					<label for="RecipeID" class="control-label col-lg-3" data-parent_link="view_parent_modal">Recipe<span class="text-danger"><%%TRANSLATION(*)%%></span> <button class="btn btn-info btn-xs vspacer-sm" type="button" data-toggle="collapse" tabindex="-1" data-target="#RecipeID-description"><i class="glyphicon glyphicon-info-sign"></i></button></label>
+					<label for="RecipeID" class="control-label col-lg-3" data-parent_link="view_parent_modal">Recipe<span class="text-danger"><%%TRANSLATION(*)%%></span> <i class="glyphicon glyphicon-info-sign text-info" data-toggle="collapse" data-target="#RecipeID-description"></i></label>
 					<div class="col-lg-9">
 						<span class="help-block collapse" id="RecipeID-description"><div class="alert alert-info">What recipe would you like to add to this meal?</div></span>
 
@@ -63,6 +63,16 @@
 			var add_new_mode = (!$j('input[name=SelectedID]').val());
 			var embedded_mode = ($j('input[name=Embedded]').val() == 1);
 
+			/* auto-close embedded page? */
+			var autoclose_mode = ($j('input[name=AutoClose]').val() == 1);
+			var record_added_ok = (location.search.split('record-added-ok=').length == 2);
+			var record_updated_ok = (location.search.split('record-updated-ok=').length == 2);
+			if((record_added_ok || record_updated_ok) && embedded_mode && autoclose_mode){
+				setTimeout(function(){
+					window.parent.jQuery('.modal').modal('hide');
+				}, 2000);
+			}
+
 			$j('select, input[type=text], textarea').not(':disabled').eq(0).focus();
 			$j('form').eq(0).change(function(){
 				if($j(this).data('already_changed')) return;
@@ -75,7 +85,7 @@
 
 			if(!embedded_mode){
 				/* add a horizontal spacer to [add new parent] buttons that don't have a spacered element before them */
-				$j('.add_new_parent').prev(':not(.hspacer-lg)').next().addClass('hspacer-lg');
+				$j('.add_new_parent').prev(':not(.hspacer-md)').next().addClass('hspacer-md');
 
 				$j('.add_new_parent').click(function(){
 					var pt = $j(this).attr('id').replace(/_add_new$/, '');
@@ -133,6 +143,26 @@
 							break;
 					}
 
+				}
+			});
+
+
+			/* load admin tools for admin user */
+			if(!add_new_mode){
+				$j('body').append('<div id="admin-tools-appendix"></div>');
+				$j('#admin-tools-appendix').load(
+					'ajax_admin_tools.php?table=mealrecipes&id=<%%URLVALUE(MealRecipeID)%%>',
+					function(resp){
+						if(!resp.length) return;
+						$j.ajax('ajax_admin_tools.php?action=get_admin_tools_js&table=mealrecipes&id=<%%URLVALUE(MealRecipeID)%%>');
+					}
+				);
+			}
+
+			/* warn user if 'add new' clicked while unsaved changes exist */
+			$j('#addNew').click(function(){
+				if($j('#deselect.btn-warning').length){
+					return confirm('<%%TRANSLATION(discard changes confirm)%%>');
 				}
 			});
 

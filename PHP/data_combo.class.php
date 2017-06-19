@@ -21,6 +21,10 @@ class DataCombo{
 		$HTML,      // this is returned. The combo html source after calling Render().
 		$MatchText; // will store the parent caption value of the matching item.
 
+	function __construct(){  // PHP 7 compatibility
+		$this->DataCombo();
+	}
+
 	function DataCombo(){ // Constructor function
 		$this->FirstItem = '';
 		$this->HTML = '';
@@ -38,7 +42,7 @@ class DataCombo{
 		$eo['silentErrors']=true;
 		$result = sql($this->Query . ' limit ' . datalist_auto_complete_size, $eo);
 		if($eo['error']!=''){
-			$this->HTML = error_message(htmlspecialchars($eo['error']) . "\n\n<!--\n{$Translation['query:']}\n {$this->Query}\n-->\n\n");
+			$this->HTML = error_message(html_attr($eo['error']) . "\n\n<!--\n{$Translation['query:']}\n {$this->Query}\n-->\n\n");
 			return;
 		}
 
@@ -57,7 +61,7 @@ class DataCombo{
 		$combo->AllowNull = ($this->ListType == 2 ? 0 : $this->AllowNull);
 
 		while($row = db_fetch_row($result)){
-			$combo->ListData[] = htmlspecialchars($row[0], ENT_QUOTES, 'iso-8859-1');
+			$combo->ListData[] = html_attr($row[0]);
 			$combo->ListItem[] = $row[1];
 		}
 		$combo->Render();
@@ -66,10 +70,10 @@ class DataCombo{
 		$this->SelectedData = $combo->SelectedData;
 		if($this->ListType == 2){
 			$rnd = rand(100, 999);
-			$SelectedID = htmlspecialchars(urlencode($this->SelectedData));
+			$SelectedID = html_attr(urlencode($this->SelectedData));
 			$pt_perm = getTablePermissions($this->parent_table);
 			if($pt_perm['view'] || $pt_perm['edit']){
-				$this->HTML = str_replace(">{$this->MatchText}</label>", ">{$this->MatchText}</label> <button type=\"button\" class=\"btn btn-default view_parent hspacer-lg\" id=\"{$this->parent_table}_view_parent\" title=" . htmlspecialchars($Translation['View']) . "><i class=\"glyphicon glyphicon-eye-open\"></i></button>", $combo->HTML);
+				$this->HTML = str_replace(">{$this->MatchText}</label>", ">{$this->MatchText}</label> <button type=\"button\" class=\"btn btn-default view_parent hspacer-lg\" id=\"{$this->parent_table}_view_parent\" title=" . html_attr($Translation['View']) . "><i class=\"glyphicon glyphicon-eye-open\"></i></button>", $combo->HTML);
 			}
 			$this->HTML = str_replace(' type="radio" ', ' type="radio" onclick="' . $this->SelectName . '_changed();" ', $this->HTML);
 		}else{

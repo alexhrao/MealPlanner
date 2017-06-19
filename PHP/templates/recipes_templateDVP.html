@@ -44,6 +44,18 @@
 				<div class="form-control-static"><span id="SourceID<%%RND1%%>"><%%COMBOTEXT(SourceID)%%></span></div>
 			</div>
 		</div>
+		<div class="form-group" style="border-bottom: dotted 1px #DDD;">
+			<label class="col-xs-3 control-label">Time to Prepare</label>
+			<div class="col-xs-9">
+				<div class="form-control-static"><%%VALUE(PrepTime)%%></div>
+			</div>
+		</div>
+		<div class="form-group" style="border-bottom: dotted 1px #DDD;">
+			<label class="col-xs-3 control-label">Number of Servings</label>
+			<div class="col-xs-9">
+				<div class="form-control-static"><%%VALUE(Servings)%%></div>
+			</div>
+		</div>
 	</fieldset>
 </div>
 <!-- child records -->
@@ -62,11 +74,15 @@
 				SelectedID: '<%%VALUE(RecipeID)%%>',
 				Operation: 'show-children-printable'
 			},
-			'recipes-children'
+			'recipes-children',
+			'disable-element',
+			'loading-element',
+			apply_persisting_children
 		);
 
 		$j('form').on('click', '#children-tabs button[data-target]', function(){
 			$j(this).toggleClass('active');
+			persist_expanded_child($j(this).attr('id'));
 		});
 	})
 </script>

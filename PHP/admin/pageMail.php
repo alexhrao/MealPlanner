@@ -1,168 +1,219 @@
 <?php
 	$currDir = dirname(__FILE__);
 	require("{$currDir}/incCommon.php");
+	$GLOBALS['page_title'] = $Translation['send mail'];
 	include("{$currDir}/incHeader.php");
 
 	// check configured sender
 	if(!isEmail($adminConfig['senderEmail'])){
-		?>
-		<div class="alert alert-danger">
-				<?php echo $Translation["can not send mail"]; ?>
-		</div>
-		<?php
+		echo Notification::show(array(
+			'message' => $Translation["can not send mail"],
+			'class' => 'danger',
+			'dismiss_seconds' => 3600
+		));
 		include("{$currDir}/incFooter.php");
 	}
 
 	// determine and validate recipients
-	if($_POST['saveChanges']==''){
-		$memberID=makeSafe(strtolower($_GET['memberID']));
-		$groupID=intval($_GET['groupID']);
-		$sendToAll=intval($_GET['sendToAll']);
+	$memberID = new Request('memberID', 'strtolower');
+	$groupID = intval($_REQUEST['groupID']);
+	$sendToAll = intval($_REQUEST['sendToAll']);
+	$showDebug = $_REQUEST['showDebug'] ? true : false;
 
-		$isGroup=($memberID!='' ? FALSE : TRUE);
-		$recipient=($sendToAll ? $Translation["all groups"] : ($isGroup ? sqlValue("select name from membership_groups where groupID='$groupID'") : sqlValue("select memberID from membership_users where lcase(memberID)='$memberID'")));
-		if(!$recipient){
-			?>
-			<div class="alert alert-danger">
-				<?php echo $Translation["no recipient"];  ?>
-			</div>
-			<?php
+	$isGroup = ($memberID->raw != '' ? false : true);
+
+	$recipient = ($sendToAll ? $Translation['all groups'] : ($isGroup ? sqlValue("select name from membership_groups where groupID='$groupID'") : sqlValue("select memberID from membership_users where lcase(memberID)='{$memberID->sql}'")));
+	if(!$recipient){
+		echo Notification::show(array(
+			'message' => $Translation['no recipient'],
+			'class' => 'danger',
+			'dismiss_seconds' => 3600
+		));
+		include("{$currDir}/incFooter.php");
+	}
+
+	if(isset($_POST['saveChanges'])){
+		if(!csrf_token(true)){
+			echo Notification::show(array(
+				'message' => $Translation['csrf token expired or invalid'],
+				'class' => 'warning',
+				'dismiss_seconds' => 3600
+			));
 			include("{$currDir}/incFooter.php");
 		}
-	}else{
-	// begin sending emails
-		$memberID=makeSafe(strtolower($_POST['memberID']));
-		$groupID=intval($_POST['groupID']);
-		$sendToAll=intval($_POST['sendToAll']);
 
-		$mailSubject=(get_magic_quotes_gpc() ? $_POST['mailSubject'] : addslashes($_POST['mailSubject']));
-		$mailMessage=(get_magic_quotes_gpc() ? $_POST['mailMessage'] : addslashes($_POST['mailMessage']));
-		$mailMessage=str_replace("\n", "\\n", $mailMessage);
-		$mailMessage=str_replace("\r", "\\r", $mailMessage);
+		// validate and sanitize mail subject and message
+		$msr = new Request('mailSubject');
+		$mmr = new Request('mailMessage');
+		$mailSubject = strip_tags($msr->raw);
+		$mailMessage = strip_tags($mmr->raw);
 
-		// validate that subject is a single line
-		if(preg_match("/(%0A|%0D|\n+|\r+)/i", $mailSubject)){
-			echo "<div class=\"status\">{$Translation["invalid subject line"]}</div>";
-			exit;
-		}
-
-		$isGroup=($memberID!='' ? FALSE : TRUE);
-		$recipient=($sendToAll ? $Translation["all groups"] : ($isGroup ? sqlValue("select name from membership_groups where groupID='$groupID'") : sqlValue("select lcase(memberID) from membership_users where lcase(memberID)='$memberID'")));
+		$isGroup = ($memberID->raw != '' ? false : true);
+		$recipient = ($sendToAll ? $Translation["all groups"] : ($isGroup ? sqlValue("select name from membership_groups where groupID='$groupID'") : sqlValue("select lcase(memberID) from membership_users where lcase(memberID)='{$memberID->sql}'")));
 		if(!$recipient){
-			?>
-			<div class="alert alert-danger">
-				<?php echo $Translation["no recipient"];  ?>
-			</div>
-			<?php
+			echo Notification::show(array(
+				'message' => $Translation["no recipient"],
+				'class' => 'danger',
+				'dismiss_seconds' => 3600
+			));
 			include("{$currDir}/incFooter.php");
 		}
 
 		// create a recipients array
+		$to = array();
 		if($sendToAll){
-			$res=sql("select email from membership_users", $eo);
+			$res = sql("select email from membership_users", $eo);
 		}elseif($isGroup){
-			$res=sql("select email from membership_users where groupID='$groupID'", $eo);
+			$res = sql("select email from membership_users where groupID='{$groupID}'", $eo);
 		}else{
-			$res=sql("select email from membership_users where lcase(memberID)='$memberID'", $eo);
+			$res = sql("select email from membership_users where lcase(memberID)='{$memberID->sql}'", $eo);
 		}
-		while($row=db_fetch_row($res)){
-			$to[]=$row[0];
+		while($row = db_fetch_row($res)){
+			if(!isEmail($row[0])) continue;
+			$to[] = $row[0];
 		}
 
 		// check that there is at least 1 recipient
-		if(count($to)<1){
-			?>
-			<div class="alert alert-danger">
-				<?php echo $Translation["no recipient found"] ;  ?>
-			</div>
-			<?php
+		if(count($to) < 1){
+			echo Notification::show(array(
+				'message' => $Translation['no recipient found'],
+				'class' => 'danger',
+				'dismiss_seconds' => 3600
+			));
 			include("{$currDir}/incFooter.php");
 		}
 
 		// save mail queue
-		$queueFile=md5(microtime());
+		$queueFile = md5(microtime());
 		$currDir = dirname(__FILE__);
-		if(!$fp=fopen("{$currDir}/$queueFile.php", "w")){
-			?>
-			<div class="alert alert-danger">
-				<?php echo str_replace ( "<CURRDIR>" , $currDir , $Translation["mail queue not saved"] ); ?>
-			</div>
-			<?php
+		if(!($fp = fopen("{$currDir}/{$queueFile}.php", 'w'))){
+			echo Notification::show(array(
+				'message' => str_replace('<CURRDIR>', $currDir, $Translation['mail queue not saved']),
+				'class' => 'danger',
+				'dismiss_seconds' => 3600
+			));
 			include("{$currDir}/incFooter.php");
-		}else{
-			fwrite($fp, "<?php\n");
-			foreach($to as $recip){
-				fwrite($fp, "\t\$to[]='$recip';\n");
-			}
-			fwrite($fp, "\t\$mailSubject=\"$mailSubject\";\n");
-			fwrite($fp, "\t\$mailMessage=\"$mailMessage\";\n");
-			fwrite($fp, "?>");
-			fclose($fp);
 		}
 
+		fwrite($fp, '<' . "?php\n");
+		foreach($to as $recip){
+			fwrite($fp, "\t\$to[] = '{$recip}';\n");
+		}
+		fwrite($fp, "\t\$mailSubject = \"" . addcslashes($mailSubject, "\r\n\t\"\\\$") . "\";\n");
+		fwrite($fp, "\t\$mailMessage = \"" . addcslashes($mailMessage, "\r\n\t\"\\\$") . "\";\n");
+		fwrite($fp, '?' . '>');
+		fclose($fp);
+
+		// showDebug checked? save to session (for use in pageSender.php, then will be reset)
+		$_SESSION["debug_{$queueFile}"] = false;
+		if($showDebug) $_SESSION["debug_{$queueFile}"] = true;
+
 		// redirect to mail queue processor
-		redirect("admin/pageSender.php?queue=$queueFile");
+		$simulate = isset($_REQUEST['simulate']) ? '&simulate=1' : '';
+		redirect("admin/pageSender.php?queue={$queueFile}{$simulate}");
 		include("{$currDir}/incFooter.php");
 	}
 
-
+	if($sendToAll){
+		echo Notification::show(array(
+			'message' => "<b>{$Translation['attention']}</b><br>{$Translation['send mail to all members']}",
+			'class' => 'warning',
+			'dismiss_days' => 3,
+			'id' => 'send_mail_to_all_users'
+		));
+	}
 ?>
 
-<div class="page-header"><h1><?php echo $Translation["send mail"] ;  ?></h1></div>
+<div class="page-header"><h1><?php echo $Translation['send mail']; ?></h1></div>
 
-<?php if($sendToAll){ ?>
-	<div class="alert alert-warning"><u><?php echo $Translation["attention"] ;  ?></u><br><?php echo $Translation["send mail to all members"] ; ?></div>
-<?php } ?>
-
-<form method="post" action="pageMail.php">
-	<input type="hidden" name="memberID" value="<?php echo $memberID; ?>">
+<form method="post" action="pageMail.php" class="form-horizontal">
+	<?php echo csrf_token(); ?>
+	<input type="hidden" name="memberID" value="<?php echo $memberID->attr; ?>">
 	<input type="hidden" name="groupID" value="<?php echo $groupID; ?>">
 	<input type="hidden" name="sendToAll" value="<?php echo $sendToAll; ?>">
-	<table class="table table-striped">
-		<tr>
-			<td class="tdFormCaption text-right flip" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation["from"] ; ?></div>
-				</td>
-			<td class="tdFormInput text-left flip">
-				<?php echo $adminConfig['senderName']." &lt;".$adminConfig['senderEmail']."&gt;"; ?>
-				<br><a href="pageSettings.php"><?php echo $Translation["change setting"] ; ?></a>
-				</td>
-			</tr>
+	<?php if(isset($_REQUEST['simulate'])){ ?>
+		<input type="hidden" name="simulate" value="1">
+	<?php } ?>
 
-		<tr>
-			<td class="tdFormCaption text-right flip" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation["to"] ; ?></div>
-				</td>
-			<td class="tdFormInput text-left flip">
-				<a href="<?php echo ($sendToAll ? "pageViewMembers.php" : ($isGroup ? "pageViewMembers.php?groupID=$groupID" : "pageEditMember.php?memberID=$memberID")); ?>"><img src="images/<?php echo (($isGroup||$sendToAll) ? "members_icon.gif" : "member_icon.gif"); ?>" border="0"></a> <?php echo $recipient; ?>
-				</td>
-			</tr>
+	<div class="form-group">
+		<label class="col-sm-4 col-md-3 col-lg-2 col-lg-offset-2 control-label"><?php echo $Translation["from"]; ?></label>
+		<div class="col-sm-8 col-md-9 col-lg-6">
+			<p class="form-control-static">
+				<?php echo "{$adminConfig['senderName']} &lt;{$adminConfig['senderEmail']}&gt;"; ?>
+				<div>
+					<a href="pageSettings.php#mail-settings" class="btn btn-default">
+						<i class="glyphicon glyphicon-pencil"></i>
+						<?php echo $Translation['configure mail settings']; ?>
+					</a>
+				</div>
+			</p>
+		</div>
+	</div>
 
-		<tr>
-			<td class="tdFormCaption text-right flip" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation["subject"] ; ?></div>
-				</td>
-			<td class="tdFormInput text-left flip">
-				<input type="text" name="mailSubject" value="" size="60" class="formTextBox">
-				</td>
-			</tr>
+	<div class="form-group">
+		<label class="col-sm-4 col-md-3 col-lg-2 col-lg-offset-2 control-label"><?php echo $Translation['to']; ?></label>
+		<div class="col-sm-8 col-md-9 col-lg-6">
+			<p class="form-control-static">
+				<?php
+					$to_link = "pageEditMember.php?memberID={$memberID->url}";
+					if($sendToAll)
+						$to_link = "pageViewMembers.php";
+					if(!$sendToAll && $isGroup)
+						$to_link = "pageViewMembers.php?groupID={$groupID}";
+				?>
+				<a href="<?php echo $to_link; ?>">
+					<i class="glyphicon glyphicon-user text-info"></i> 
+					<?php echo $recipient; ?>
+				</a>
+				<div class="btn-group">
+					<a href="pageViewGroups.php" class="btn btn-default"><?php echo $Translation['send email to all members']; ?></a>
+					<a href="pageViewMembers.php" class="btn btn-default"><?php echo $Translation['send email to member']; ?></a>
+				</div>
+			</p>
+		</div>
+	</div>
 
-		<tr>
-			<td class="tdFormCaption text-right flip" valign="top">
-				<div class="formFieldCaption"><?php echo $Translation["message"] ; ?></div>
-				</td>
-			<td class="tdFormInput text-left flip">
-				<textarea name="mailMessage" cols="60" rows="10" class="formTextBox"></textarea>
-				</td>
-			</tr>
+	<div class="form-group">
+		<label for="mailSubject" class="col-sm-4 col-md-3 col-lg-2 col-lg-offset-2 control-label"><?php echo $Translation["subject"]; ?></label>
+		<div class="col-sm-8 col-md-9 col-lg-6">
+			<input class="form-control" name="mailSubject" id="mailSubject" autofocus>
+		</div>
+	</div>
 
-		<tr>
-			<td colspan="2" class="tdFormFooter text-right flip">
-				<input type="submit" name="saveChanges" value="<?php echo $Translation["send message"] ; ?>" onClick="return jsShowWait();">
-				</td>
-			</tr>
-		</table>
+	<div class="form-group">
+		<label for="mailMessage" class="col-sm-4 col-md-3 col-lg-2 col-lg-offset-2 control-label"><?php echo $Translation["message"]; ?></label>
+		<div class="col-sm-8 col-md-9 col-lg-6">
+			<textarea rows="10" class="form-control" name="mailMessage" id="mailMessage"></textarea>
+		</div>
+	</div>
+
+	<?php if($adminConfig['mail_function'] == 'smtp'){ ?>
+		<div class="checkbox">
+			<div class="col-sm-offset-4 col-md-offset-3 col-lg-offset-4 col-sm-8 col-md-9 col-lg-6">
+				<label for="showDebug">
+					<input type="checkbox" name="showDebug" value="1" id="showDebug">
+					<?php echo $Translation['display debugging info']; ?>
+					<span class="help-block"><?php echo $Translation['debugging info hint']; ?></span>
+				</label>
+			</div>
+		</div>
+	<?php } ?>
+
+	<div class="form-group">
+		<div class="col-sm-4 col-sm-offset-4 col-md-6 col-md-offset-3 col-lg-4 col-lg-offset-4">
+			<button name="saveChanges" type="submit" class="btn btn-primary btn-lg btn-block"><i class="glyphicon glyphicon-envelope"></i> <?php echo $Translation["send message"]; ?></button>
+		</div>
+	</div>
 </form>
+
+<script>
+	$j(function(){
+		$j('form').submit(function(){
+			return jsShowWait();
+		});
+	})
+</script>
+
 <?php
 	include("{$currDir}/incFooter.php");
 ?>

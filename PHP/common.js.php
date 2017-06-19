@@ -1,16 +1,119 @@
 <?php
-	@header("Content-Type: text/javascript; charset=iso-8859-1");
-	$currDir=dirname(__FILE__);
-	include("$currDir/defaultLang.php");
-	include("$currDir/language.php");
+	if(!defined('datalist_db_encoding')) define('datalist_db_encoding', 'iso-8859-1');
+	if(function_exists('date_default_timezone_set')) @date_default_timezone_set('America/New_York');
+
+	/* force caching */
+	$last_modified = filemtime(__FILE__);
+	$last_modified_gmt = gmdate('D, d M Y H:i:s', $last_modified) . ' GMT';
+	$headers = (function_exists('getallheaders') ? getallheaders() : $_SERVER);
+	if(isset($headers['If-Modified-Since']) && (strtotime($headers['If-Modified-Since']) == $last_modified)){
+		@header("Last-Modified: {$last_modified_gmt}", true, 304);
+		@header("Cache-Control: public, max-age=240", true);
+		exit;
+	}
+
+	@header("Last-Modified: {$last_modified_gmt}", true, 200);
+	@header("Cache-Control: public, max-age=240", true);
+	@header('Content-Type: text/javascript; charset=' . datalist_db_encoding);
+	$currDir = dirname(__FILE__);
+	include("{$currDir}/defaultLang.php");
+	include("{$currDir}/language.php");
 ?>
+var AppGini = AppGini || {};
+AppGini.ajaxCache = function(){
+	var _tests = [];
+
+	/*
+		An array of functions that receive a parameterless url and a parameters object,
+		makes a test,
+		and if test passes, executes something and/or
+		returns a non-false value if test passes,
+		or false if test failed (useful to tell if tests should continue or not)
+	*/
+	var addCheck = function(check){ //
+		if(typeof(check) == 'function'){
+			_tests.push(check);
+		}
+	};
+
+	var _jqAjaxData = function(opt){ //
+		var opt = opt || {};   
+		var url = opt.url || '';
+		var data = opt.data || {};
+
+		var params = url.match(/\?(.*)$/);
+		var param = (params !== null ? params[1] : '');
+
+		var sPageURL = decodeURIComponent(param),
+			sURLVariables = sPageURL.split('&'),
+			sParameter,
+			i;
+
+		for(i = 0; i < sURLVariables.length; i++){
+			sParameter = sURLVariables[i].split('=');
+			if(sParameter[0] == '') continue;
+			data[sParameter[0]] = sParameter[1] || '';
+		}
+
+		return data;
+	};
+
+	var start = function(){ //
+		if(!_tests.length) return; // no need to monitor ajax requests since no checks were defined
+		var reqTests = _tests;
+		$j.ajaxPrefilter(function(options, originalOptions, jqXHR){
+			var success = originalOptions.success || $j.noop,
+				data = _jqAjaxData(originalOptions),
+				oUrl = originalOptions.url || '',
+				url = oUrl.match(/\?/) ? oUrl.match(/(.*)\?/)[1] : oUrl;
+
+			options.beforeSend = function(){ //
+				var req, cached = false, resp;
+
+				for(var i = 0; i < reqTests.length; i++){
+					resp = reqTests[i](url, data);
+					if(resp === false) continue;
+
+					success(resp);
+					return false;
+				}
+
+				return true;
+			}
+		});
+	};
+
+	return {
+		addCheck: addCheck,
+		start: start
+	};
+};
+
 /* initials and fixes */
 jQuery(function(){
+	AppGini.count_ajaxes_blocking_saving = 0;
+
+	/* add ":truncated" pseudo-class to detect elements with clipped text */
+	$j.expr[':'].truncated = function(obj){
+		var $this = $j(obj);
+		var $c = $this
+					.clone()
+					.css({ display: 'inline', width: 'auto', visibility: 'hidden', 'padding-right': 0 })
+					.css({ 'font-size': $this.css('font-size') })
+					.appendTo('body');
+
+		var e_width = $this.outerWidth();
+		var c_width = $c.outerWidth();
+		$c.remove();
+
+		return ( c_width > e_width );
+	};
+
 	$j(window).resize(function(){
 		var window_width = $j(window).width();
 		var max_width = $j('body').width() * 0.5;
 
-		if($j('fieldset .col-xs-11').length) max_width = $j('fieldset .col-xs-11').width() - 109;
+		if($j('fieldset .col-xs-11').length) max_width = $j('fieldset .col-xs-11').width() - select2_max_width_decrement();
 		$j('.select2-container:not(.option_list)').css({ 'max-width' : max_width + 'px', 'width': '100%' });
 		fix_table_responsive_width();
 
@@ -19,14 +122,34 @@ jQuery(function(){
 		else if(window_width >= 768) full_img_factor = 0.9; /* sm */
 
 		$j('.detail_view .img-responsive').css({'max-width' : parseInt($j('.detail_view').width() * full_img_factor) + 'px'});
+
+		/* remove labels from truncated buttons, leaving only glyphicons */
+		$j('.btn:truncated').each(function(){
+			// hide text
+			var label = $j(this).html();
+			var mlabel = label.replace(/.*(<i.*?><\/i>).*/, '$1');
+			$j(this).html(mlabel);
+		});
 	});
 
 	setTimeout(function(){ $j(window).resize(); }, 1000);
 	setTimeout(function(){ $j(window).resize(); }, 3000);
 
-	/* don't allow saving detail view while an ajax request is in progress */
-	jQuery(document).ajaxStart(function(){ jQuery('#update, #insert').prop('disabled', true); });
-	jQuery(document).ajaxStop(function(){ jQuery('#update, #insert').prop('disabled', false); });
+	/* don't allow saving detail view when there's an ajax request to a url that matches the following */
+	var ajax_blockers = new RegExp(/(ajax_combo\.php|_autofill\.php|ajax_check_unique\.php)/);
+	$j(document).ajaxSend(function(e, r, s){
+		if(s.url.match(ajax_blockers)){
+			AppGini.count_ajaxes_blocking_saving++;
+			$j('#update, #insert').prop('disabled', true);
+		}
+	});
+	$j(document).ajaxComplete(function(e, r, s){
+		if(s.url.match(ajax_blockers)){
+			AppGini.count_ajaxes_blocking_saving = Math.max(AppGini.count_ajaxes_blocking_saving - 1, 0);
+			if(AppGini.count_ajaxes_blocking_saving <= 0)
+				$j('#update, #insert').prop('disabled', false);
+		}
+	});
 
 	/* don't allow responsive images to initially exceed the smaller of their actual dimensions, or .6 container width */
 	jQuery('.detail_view .img-responsive').each(function(){
@@ -71,9 +194,21 @@ jQuery(function(){
 	});
 
 	/* fix behavior of select2 in bootstrap modal. See: https://github.com/ivaynberg/select2/issues/1436 */
-	jQuery.fn.modal.Constructor.prototype.enforceFocus = function(){};
+	jQuery.fn.modal.Constructor.prototype.enforceFocus = function(){ /**/ };
+
+	/* remove empty navbar menus */
+	$j('nav li.dropdown').each(function(){
+		var num_items = $j(this).children('.dropdown-menu').children('li').length;
+		if(!num_items) $j(this).remove();
+	})
 
 	update_action_buttons();
+
+	/* remove empty images and links from TV, TVP */
+	$j('.table a[href="<?php echo $Translation['ImageFolder']; ?>"], .table img[src="<?php echo $Translation['ImageFolder']; ?>"]').remove();
+
+	/* remove empty email links from TV, TVP */
+	$j('a[href="mailto:"]').remove();
 });
 
 /* show/hide TV action buttons based on whether records are selected or not */
@@ -105,6 +240,7 @@ function fix_table_responsive_width(){
 function mealdates_validateData(){
 	$j('.has-error').removeClass('has-error');
 	if($j('#MealID').val() == ''){ modal_window({ message: '<div class="alert alert-danger"><?php echo addslashes($Translation['field not null']); ?></div>', title: "<?php echo addslashes($Translation['error:']); ?> Meal", close: function(){ $j('[name=MealID]').focus(); $j('[name=MealID]').parents('.form-group').addClass('has-error'); } }); return false; };
+	if($j('#MealTime').val() == ''){ modal_window({ message: '<div class="alert alert-danger"><?php echo addslashes($Translation['field not null']); ?></div>', title: "<?php echo addslashes($Translation['error:']); ?> Time", close: function(){ $j('[name=MealTime]').focus(); $j('[name=MealTime]').parents('.form-group').addClass('has-error'); } }); return false; };
 	return true;
 }
 function meals_validateData(){
@@ -150,25 +286,27 @@ function stores_validateData(){
 	if($j('#Name').val() == ''){ modal_window({ message: '<div class="alert alert-danger"><?php echo addslashes($Translation['field not null']); ?></div>', title: "<?php echo addslashes($Translation['error:']); ?> Name", close: function(){ $j('[name=Name]').focus(); $j('[name=Name]').parents('.form-group').addClass('has-error'); } }); return false; };
 	return true;
 }
-function post(url, params, update, disable, loading){
-	new Ajax.Request(
-		url, {
-			method: 'post',
-			parameters: params,
-			onCreate: function() {
-				if($(disable) != undefined) $(disable).disabled=true;
-				if($(loading) != undefined && update != loading) $(loading).update('<div style="direction: ltr;"><img src="loading.gif"> <?php echo $Translation['Loading ...']; ?></div>');
-			},
-			onSuccess: function(resp) {
-				if($(update) != undefined) $(update).update(resp.responseText);
-			},
-			onComplete: function() {
-				if($(disable) != undefined) $(disable).disabled=false;
-				if($(loading) != undefined && loading != update) $(loading).update('');
-			}
+
+function post(url, params, update, disable, loading, success_callback){
+	$j.ajax({
+		url: url,
+		type: 'POST',
+		data: params,
+		beforeSend: function() {
+			if($j('#' + disable).length) $j('#' + disable).prop('disabled', true);
+			if($j('#' + loading).length && update != loading) $j('#' + loading).html('<div style="direction: ltr;"><img src="loading.gif"> <?php echo addslashes($Translation['Loading ...']); ?></div>');
+		},
+		success: function(resp) {
+			if($j('#' + update).length) $j('#' + update).html(resp);
+			if(success_callback != undefined) success_callback();
+		},
+		complete: function() {
+			if($j('#' + disable).length) $j('#' + disable).prop('disabled', false);
+			if($j('#' + loading).length && loading != update) $j('#' + loading).html('');
 		}
-	);
+	});
 }
+
 function post2(url, params, notify, disable, loading, redirectOnSuccess){
 	new Ajax.Request(
 		url, {
@@ -607,7 +745,7 @@ function mass_change_owner(t, ids){
 }
 
 function add_more_actions_link(){
-	window.open('http://bigprof.com/appgini/help/advanced-topics/hooks/multiple-record-batch-actions?r=appgini-action-menu');
+	window.open('https://bigprof.com/appgini/help/advanced-topics/hooks/multiple-record-batch-actions?r=appgini-action-menu');
 }
 
 /* detect current screen size (xs, sm, md or lg) */
@@ -650,4 +788,68 @@ function enable_dvab_floating(){
 		}
 	});
 	window.enable_dvab_floating_run = true;
+}
+
+/* check if a given field's value is unique and reflect this in the DV form */
+function enforce_uniqueness(table, field){
+	$j('#' + field).on('change', function(){
+		/* check uniqueness of field */
+		var data = {
+			t: table,
+			f: field,
+			value: $j('#' + field).val()
+		};
+
+		if($j('[name=SelectedID]').val().length) data.id = $j('[name=SelectedID]').val();
+
+		$j.ajax({
+			url: 'ajax_check_unique.php',
+			data: data,
+			complete: function(resp){
+				if(resp.responseJSON.result == 'ok'){
+					$j('#' + field + '-uniqueness-note').hide();
+					$j('#' + field).parents('.form-group').removeClass('has-error');
+				}else{
+					$j('#' + field + '-uniqueness-note').show();
+					$j('#' + field).parents('.form-group').addClass('has-error');
+					$j('#' + field).focus();
+					setTimeout(function(){ $j('#update, #insert').prop('disabled', true); }, 500);
+				}
+			}
+		})
+	});
+}
+
+/* persist expanded/collapsed chidren in DVP */
+function persist_expanded_child(id){
+	var expand_these = Cookies.getJSON('Meal_Planner.dvp_expand');
+	if(expand_these == undefined) expand_these = [];
+
+	if($j('[id=' + id + ']').hasClass('active')){
+		if(expand_these.indexOf(id) < 0){
+			// expanded button and not persisting in cookie? save it!
+			expand_these.push(id);
+			Cookies.set('Meal_Planner.dvp_expand', expand_these, { expires: 30 });
+		}
+	}else{
+		if(expand_these.indexOf(id) >= 0){
+			// collapsed button and persisting in cookie? remove it!
+			expand_these.splice(expand_these.indexOf(id), 1);
+			Cookies.set('Meal_Planner.dvp_expand', expand_these, { expires: 30 });
+		}
+	}
+}
+
+/* apply expanded/collapsed status to children in DVP */
+function apply_persisting_children(){
+	var expand_these = Cookies.getJSON('Meal_Planner.dvp_expand');
+	if(expand_these == undefined) return;
+
+	expand_these.each(function(id){
+		$j('[id=' + id + ']:not(.active)').click();
+	});
+}
+
+function select2_max_width_decrement(){
+	return ($j('div.container').eq(0).hasClass('theme-compact') ? 99 : 109);
 }

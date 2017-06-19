@@ -4,6 +4,24 @@
 	<span id="table-title-img"><img align="top" src="<?php echo $this->TableIcon; ?>" /></span> <?php echo $this->TableTitle . " " . $Translation['filters']; ?>
 </h1></div>
 
+<?php
+	/* SPM link for admin */
+	if(getLoggedAdmin()){
+		$spm_installed = false;
+		$plugins = get_plugins();
+		foreach($plugins as $pl){
+			if($pl['title'] == 'Search Page Maker') $spm_installed = true;
+		}
+
+		if(!$spm_installed) echo Notification::show(array(
+			'message' => '<i class="glyphicon glyphicon-info-sign"></i> Wish to offer your users an easier, more-tailored search experience? <a href="https://bigprof.com/appgini/applications?search-page-maker-plugin-discount" target="_blank" class="alert-link"><i class="glyphicon glyphicon-hand-right"></i> Click here to learn how Search Page Maker plugin can help</a>.',
+			'dismiss_days' => 30,
+			'class' => 'success',
+			'id' => 'spm_notification'
+		));
+	}
+?>
+
 <!-- checkboxes for parent filterers -->
 <?php
 	foreach($this->filterers as $filterer => $caption){
@@ -15,7 +33,7 @@
 				<div class="col-md-offset-3 col-md-7">
 					<div class="checkbox">
 						<label>
-							<input type="checkbox" id="<?php echo $fltrr_name; ?>" name="<?php echo $fltrr_name; ?>" value="<?php echo htmlspecialchars($fltrr_val); ?>" checked>
+							<input type="checkbox" id="<?php echo $fltrr_name; ?>" name="<?php echo $fltrr_name; ?>" value="<?php echo html_attr($fltrr_val); ?>" checked>
 							<strong><?php printf($Translation['Only show records having filterer'], $caption, "<span class=\"text-info\" id=\"{$fltrr_name}_display_value\"></span>"); ?></strong>
 						</label>
 						<script>
@@ -272,7 +290,7 @@
 		if(jQuery('#FilterAnd_' + (    FiltersPerGroup + 1) + '_').val()){ filterGroupDisplay(2); }
 		if(jQuery('#FilterAnd_' + (2 * FiltersPerGroup + 1) + '_').val()){ filterGroupDisplay(3); }
 
-		var DisplayRecords = '<?php echo $_REQUEST['DisplayRecords']; ?>';
+		var DisplayRecords = '<?php echo html_attr($_REQUEST['DisplayRecords']); ?>';
 
 		switch(DisplayRecords){
 			case 'user':

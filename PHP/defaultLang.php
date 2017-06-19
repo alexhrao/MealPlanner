@@ -62,7 +62,7 @@
 	$Translation['update record'] = 'Update record';
 	$Translation['delete record'] = 'Delete record';
 	$Translation['deselect record'] = 'Deselect record';
-	$Translation["couldn't delete"] = 'Could not the delete record due to the presence of <RelatedRecords> related record(s) in table [<TableName>]';
+	$Translation["couldn't delete"] = 'Could not delete the record due to the presence of <RelatedRecords> related record(s) in table [<TableName>]';
 	$Translation['confirm delete'] = 'This record has <RelatedRecords> related record(s) in table [<TableName>]. Do you still want to delete it? <Delete> &nbsp; <Cancel>';
 	$Translation['yes'] = 'Yes';
 	$Translation['no'] = 'No';
@@ -278,4 +278,20 @@
 	$Translation['invalid provider'] = 'Invalid provider!';
 	$Translation['invalid url'] = 'Invalid URL!';
 	$Translation['cant retrieve coordinates from url'] = 'Can\'t retrieve coordinates from URL!';
+
+	/* Added in AppGini 5.51 */
+	$Translation['maintenance mode admin notification'] = 'Maintenance mode is enabled! You can disable it from the admin home page.';
+	$Translation['unique field error'] = 'This value already exists or is invalid. Please make sure to specify a unique valid value.';
+
+	/* Added in AppGini 5.60 */
+	$Translation['show all user records from table'] = 'Show all records of this user from "<tablename>" table';
+	$Translation['show all group records from table'] = 'Show all records of this group from "<tablename>" table';
+	$Translation['email this user'] = 'Email this user';
+	$Translation['email this group'] = 'Email this group';
+	$Translation['owner'] = 'Owner';
+	$Translation['created'] = 'Created';
+	$Translation['last modified'] = 'Last modified';
+	$Translation['record has no owner'] = 'This record has no assigned owner. You can assign an owner from the admin area.';
+	$Translation['admin-only info'] = 'The above info is displayed because you are currently signed in as the super admin. Other users won\'t see this.';
+	$Translation['discard changes confirm'] = 'Discard changes to this record?';
 

@@ -4,6 +4,8 @@
 	include("$currDir/language.php");
 	include("$currDir/lib.php");
 
+	handle_maintenance();
+
 	// image paths
 	$p=array(   
 	);

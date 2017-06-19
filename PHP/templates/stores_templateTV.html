@@ -1,11 +1,11 @@
 <!-- Edit this file to change the layout of each record in the table view -->
-<!-- To disable clicking of a field, remove the <%%select%%> and <%%endselect%%> formatters around it-->
+<!-- To disable clicking of a field, remove the <%%SELECT%%> and <%%ENDSELECT%%> formatters around it-->
 
 <!-- If you wish to hide the table view header that contains the column titles, -->
-<!-- open the generated 'stores_view.php' file in your text editor and -->
-<!-- change the value of $x->ShowTableHeader to 0 -->
+<!-- add the following to the stores_init() hook (in hooks/stores.php file) -->
+<!--     $options->ShowTableHeader = 0;     -->
 
-		<td id="stores-Name-<%%VALUE(StoreID)%%>" class="stores-Name "><%%SELECT%%><%%VALUE(Name)%%><%%ENDSELECT%%></td>
-		<td id="stores-PhoneNumber-<%%VALUE(StoreID)%%>" class="stores-PhoneNumber "><%%SELECT%%><%%VALUE(PhoneNumber)%%><%%ENDSELECT%%></td>
-		<td id="stores-Location-<%%VALUE(StoreID)%%>" class="stores-Location "><%%SELECT%%><%%VALUE(Location)%%><%%ENDSELECT%%></td>
-		<td id="stores-Notes-<%%VALUE(StoreID)%%>" class="stores-Notes "><%%SELECT%%><%%VALUE(Notes)%%><%%ENDSELECT%%></td>
+		<td id="stores-Name-<%%VALUE(StoreID)%%>" class="stores-Name"><%%SELECT%%><%%VALUE(Name)%%><%%ENDSELECT%%></td>
+		<td id="stores-PhoneNumber-<%%VALUE(StoreID)%%>" class="stores-PhoneNumber"><%%SELECT%%><%%VALUE(PhoneNumber)%%><%%ENDSELECT%%></td>
+		<td id="stores-Location-<%%VALUE(StoreID)%%>" class="stores-Location"><%%SELECT%%><%%VALUE(Location)%%><%%ENDSELECT%%></td>
+		<td id="stores-Notes-<%%VALUE(StoreID)%%>" class="stores-Notes"><%%SELECT%%><%%VALUE(Notes)%%><%%ENDSELECT%%></td>

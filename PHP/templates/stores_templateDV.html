@@ -35,7 +35,7 @@
 				</div>
 
 				<div class="form-group">
-					<label for="Location" class="control-label col-lg-3">Location <button class="btn btn-info btn-xs vspacer-sm" type="button" data-toggle="collapse" tabindex="-1" data-target="#Location-description"><i class="glyphicon glyphicon-info-sign"></i></button></label>
+					<label for="Location" class="control-label col-lg-3">Location <i class="glyphicon glyphicon-info-sign text-info" data-toggle="collapse" data-target="#Location-description"></i></label>
 					<div class="col-lg-9">
 						<span class="help-block collapse" id="Location-description"><div class="alert alert-info">Where is this source, if applicable?</div></span>
 
@@ -44,7 +44,7 @@
 				</div>
 
 				<div class="form-group">
-					<label for="Notes" class="control-label col-lg-3">Notes <button class="btn btn-info btn-xs vspacer-sm" type="button" data-toggle="collapse" tabindex="-1" data-target="#Notes-description"><i class="glyphicon glyphicon-info-sign"></i></button></label>
+					<label for="Notes" class="control-label col-lg-3">Notes <i class="glyphicon glyphicon-info-sign text-info" data-toggle="collapse" data-target="#Notes-description"></i></label>
 					<div class="col-lg-9">
 						<span class="help-block collapse" id="Notes-description"><div class="alert alert-info">Any notes about this source should go here.</div></span>
 
@@ -85,22 +85,28 @@
 </div><!-- /div class="panel-body" -->
 	<script src="nicEdit.js"></script>
 	<script>
-		bkLib.onDomLoaded(function(){
-			if(document.getElementById('Location')!=undefined)
-				new nicEditor().panelInstance('Location');
-			if(document.getElementById('Notes')!=undefined)
-				new nicEditor().panelInstance('Notes');
-
-			$j(function(){
-				$j('.nicEdit-panelContain').parent().width('90%');
-				$j('.nicEdit-panelContain').parent().next().width('88%');
-				$j('.nicEdit-main').width('99%');
-			});
-		});
 		$j(function() {
 			var add_new_mode = (!$j('input[name=SelectedID]').val());
 			var embedded_mode = ($j('input[name=Embedded]').val() == 1);
 
+			/* auto-close embedded page? */
+			var autoclose_mode = ($j('input[name=AutoClose]').val() == 1);
+			var record_added_ok = (location.search.split('record-added-ok=').length == 2);
+			var record_updated_ok = (location.search.split('record-updated-ok=').length == 2);
+			if((record_added_ok || record_updated_ok) && embedded_mode && autoclose_mode){
+				setTimeout(function(){
+					window.parent.jQuery('.modal').modal('hide');
+				}, 2000);
+			}
+
+			bkLib.onDomLoaded(function(){
+				if($j('textarea#Location').length) new nicEditor({ fullPanel : true }).panelInstance('Location');
+				if($j('textarea#Notes').length) new nicEditor({ fullPanel : true }).panelInstance('Notes');
+
+				$j('.nicEdit-panelContain').parent().width('90%');
+				$j('.nicEdit-panelContain').parent().next().width('88%');
+				$j('.nicEdit-main').width('99%');
+			});
 			$j('select, input[type=text], textarea').not(':disabled').eq(0).focus();
 			$j('form').eq(0).change(function(){
 				if($j(this).data('already_changed')) return;
@@ -145,7 +151,7 @@
 
 			if(!embedded_mode){
 				/* add a horizontal spacer to [add new parent] buttons that don't have a spacered element before them */
-				$j('.add_new_parent').prev(':not(.hspacer-lg)').next().addClass('hspacer-lg');
+				$j('.add_new_parent').prev(':not(.hspacer-md)').next().addClass('hspacer-md');
 
 				$j('.add_new_parent').click(function(){
 					var pt = $j(this).attr('id').replace(/_add_new$/, '');
@@ -203,6 +209,26 @@
 							break;
 					}
 
+				}
+			});
+
+
+			/* load admin tools for admin user */
+			if(!add_new_mode){
+				$j('body').append('<div id="admin-tools-appendix"></div>');
+				$j('#admin-tools-appendix').load(
+					'ajax_admin_tools.php?table=stores&id=<%%URLVALUE(StoreID)%%>',
+					function(resp){
+						if(!resp.length) return;
+						$j.ajax('ajax_admin_tools.php?action=get_admin_tools_js&table=stores&id=<%%URLVALUE(StoreID)%%>');
+					}
+				);
+			}
+
+			/* warn user if 'add new' clicked while unsaved changes exist */
+			$j('#addNew').click(function(){
+				if($j('#deselect.btn-warning').length){
+					return confirm('<%%TRANSLATION(discard changes confirm)%%>');
 				}
 			});
 

@@ -14,6 +14,10 @@ class DateCombo{
 		$CSSSelectedClass,
 		$CSSCommentClass;
 
+	function __construct(){  // PHP 7 compatibility
+		$this->DateCombo();
+	}
+
 	function DateCombo(){
 		// set default values
 		$this->DateFormat = "ymd";

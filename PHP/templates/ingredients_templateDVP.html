@@ -56,11 +56,15 @@
 				SelectedID: '<%%VALUE(IngredientID)%%>',
 				Operation: 'show-children-printable'
 			},
-			'ingredients-children'
+			'ingredients-children',
+			'disable-element',
+			'loading-element',
+			apply_persisting_children
 		);
 
 		$j('form').on('click', '#children-tabs button[data-target]', function(){
 			$j(this).toggleClass('active');
+			persist_expanded_child($j(this).attr('id'));
 		});
 	})
 </script>

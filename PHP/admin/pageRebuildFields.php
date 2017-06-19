@@ -1,6 +1,7 @@
 <?php
 	$currDir = dirname(__FILE__);
 	require("{$currDir}/incCommon.php");
+	$GLOBALS['page_title'] = $Translation['view or rebuild fields'];
 	include("{$currDir}/incHeader.php");
 
 	/* application schema as created in AppGini */
@@ -9,7 +10,7 @@
 			'MealDateID' => array('appgini' => 'INT(11) not null primary key auto_increment '),
 			'MealID' => array('appgini' => 'INT(11) not null '),
 			'MealDate' => array('appgini' => 'DATE not null '),
-			'MealTime' => array('appgini' => 'VARCHAR(50) ')
+			'MealTime' => array('appgini' => 'VARCHAR(50) not null default \'Dinner\' ')
 		),
 		'meals' => array(   
 			'MealID' => array('appgini' => 'INT(11) not null primary key auto_increment '),
@@ -23,7 +24,9 @@
 			'DateCreated' => array('appgini' => 'DATE '),
 			'Instructions' => array('appgini' => 'TEXT '),
 			'Description' => array('appgini' => 'TEXT '),
-			'SourceID' => array('appgini' => 'INT(11) ')
+			'SourceID' => array('appgini' => 'INT(11) '),
+			'PrepTime' => array('appgini' => 'TIME default \'00:00:00\' '),
+			'Servings' => array('appgini' => 'TINYINT(2) default \'0\' ')
 		),
 		'ingredients' => array(   
 			'IngredientID' => array('appgini' => 'INT(11) not null primary key auto_increment '),
@@ -174,7 +177,7 @@
 		<?php foreach($fields as $fn => $fd){ ?>
 			<?php $diff = ((prepare_def($fd['appgini']) == prepare_def($fd['db'])) ? false : true); ?>
 			<?php $no_db = ($fd['db'] ? false : true); ?>
-			<tr class="<?php echo ($diff ? 'highlight' : 'field_ok'); ?>">
+			<tr class="<?php echo ($diff ? 'warning' : 'field_ok'); ?>">
 				<td><i class="glyphicon glyphicon-<?php echo ($diff ? 'remove text-danger' : 'ok text-success'); ?>"></i></td>
 				<td><?php echo $fn; ?></td>
 				<td class="<?php echo ($diff ? 'bold text-success' : ''); ?>"><?php echo $fd['appgini']; ?></td>
@@ -195,7 +198,6 @@
 
 <style>
 	.bold{ font-weight: bold; }
-	.highlight, .highlight td{ background-color: #FFFFE0 !important; }
 	[data-toggle="tooltip"]{ display: block !important; }
 </style>
 

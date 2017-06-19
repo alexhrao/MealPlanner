@@ -25,16 +25,16 @@
 			<fieldset class="form-horizontal">
 
 				<div class="form-group">
-					<label for="Name" class="control-label col-lg-3">Name<span class="text-danger"><%%TRANSLATION(*)%%></span> <button class="btn btn-info btn-xs vspacer-sm" type="button" data-toggle="collapse" tabindex="-1" data-target="#Name-description"><i class="glyphicon glyphicon-info-sign"></i></button></label>
+					<label for="Name" class="control-label col-lg-3">Name<span class="text-danger"><%%TRANSLATION(*)%%></span> <i class="glyphicon glyphicon-info-sign text-info" data-toggle="collapse" data-target="#Name-description"></i></label>
 					<div class="col-lg-9">
 						<span class="help-block collapse" id="Name-description"><div class="alert alert-info">What would you like to call this recipe?</div></span>
 
-						<input maxlength="50" type="text" class="form-control" name="Name" id="Name" value="<%%VALUE(Name)%%>" required>
+						<input maxlength="50" type="text" class="form-control" name="Name" id="Name" value="<%%VALUE(Name)%%>" required><div class="text-danger vspacer-md" id="Name-uniqueness-note" style="display: none;"><%%TRANSLATION(unique field error)%%></div>
 					</div>
 				</div>
 
 				<div class="form-group">
-					<label for="DateCreated" class="control-label col-lg-3">Date Created <button class="btn btn-info btn-xs vspacer-sm" type="button" data-toggle="collapse" tabindex="-1" data-target="#DateCreated-description"><i class="glyphicon glyphicon-info-sign"></i></button></label>
+					<label for="DateCreated" class="control-label col-lg-3">Date Created <i class="glyphicon glyphicon-info-sign text-info" data-toggle="collapse" data-target="#DateCreated-description"></i></label>
 					<div class="col-lg-9">
 						<span class="help-block collapse" id="DateCreated-description"><div class="alert alert-info">When was this meal created?</div></span>
 
@@ -43,7 +43,7 @@
 				</div>
 
 				<div class="form-group">
-					<label for="Instructions" class="control-label col-lg-3">Instructions <button class="btn btn-info btn-xs vspacer-sm" type="button" data-toggle="collapse" tabindex="-1" data-target="#Instructions-description"><i class="glyphicon glyphicon-info-sign"></i></button></label>
+					<label for="Instructions" class="control-label col-lg-3">Instructions <i class="glyphicon glyphicon-info-sign text-info" data-toggle="collapse" data-target="#Instructions-description"></i></label>
 					<div class="col-lg-9">
 						<span class="help-block collapse" id="Instructions-description"><div class="alert alert-info">Give the complete instructions for making this meal.</div></span>
 
@@ -52,7 +52,7 @@
 				</div>
 
 				<div class="form-group">
-					<label for="Description" class="control-label col-lg-3">Description <button class="btn btn-info btn-xs vspacer-sm" type="button" data-toggle="collapse" tabindex="-1" data-target="#Description-description"><i class="glyphicon glyphicon-info-sign"></i></button></label>
+					<label for="Description" class="control-label col-lg-3">Description <i class="glyphicon glyphicon-info-sign text-info" data-toggle="collapse" data-target="#Description-description"></i></label>
 					<div class="col-lg-9">
 						<span class="help-block collapse" id="Description-description"><div class="alert alert-info">Describe the meal.</div></span>
 
@@ -61,11 +61,29 @@
 				</div>
 
 				<div class="form-group">
-					<label for="SourceID" class="control-label col-lg-3" data-parent_link="view_parent_modal">Source <button class="btn btn-info btn-xs vspacer-sm" type="button" data-toggle="collapse" tabindex="-1" data-target="#SourceID-description"><i class="glyphicon glyphicon-info-sign"></i></button></label>
+					<label for="SourceID" class="control-label col-lg-3" data-parent_link="view_parent_modal">Source <i class="glyphicon glyphicon-info-sign text-info" data-toggle="collapse" data-target="#SourceID-description"></i></label>
 					<div class="col-lg-9">
 						<span class="help-block collapse" id="SourceID-description"><div class="alert alert-info">Where did you acquire this recipe?</div></span>
 
 						<div class="row form-control-static"><div class="col-xs-11"><%%COMBO(SourceID)%%><%%PLINK(SourceID)%%><%%ADDNEW(sources)%%></div></div>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label for="PrepTime" class="control-label col-lg-3">Time to Prepare <i class="glyphicon glyphicon-info-sign text-info" data-toggle="collapse" data-target="#PrepTime-description"></i></label>
+					<div class="col-lg-9">
+						<span class="help-block collapse" id="PrepTime-description"><div class="alert alert-info">How long does it take to prepare this recipe?</div></span>
+
+						<input maxlength="" type="text" class="form-control" name="PrepTime" id="PrepTime" value="<%%VALUE(PrepTime)%%>">
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label for="Servings" class="control-label col-lg-3">Number of Servings <i class="glyphicon glyphicon-info-sign text-info" data-toggle="collapse" data-target="#Servings-description"></i></label>
+					<div class="col-lg-9">
+						<span class="help-block collapse" id="Servings-description"><div class="alert alert-info">How many servings does this create?</div></span>
+
+						<input maxlength="2" type="text" class="form-control" name="Servings" id="Servings" value="<%%VALUE(Servings)%%>">
 					</div>
 				</div>
 
@@ -102,22 +120,28 @@
 </div><!-- /div class="panel-body" -->
 	<script src="nicEdit.js"></script>
 	<script>
-		bkLib.onDomLoaded(function(){
-			if(document.getElementById('Instructions')!=undefined)
-				new nicEditor().panelInstance('Instructions');
-			if(document.getElementById('Description')!=undefined)
-				new nicEditor().panelInstance('Description');
-
-			$j(function(){
-				$j('.nicEdit-panelContain').parent().width('90%');
-				$j('.nicEdit-panelContain').parent().next().width('88%');
-				$j('.nicEdit-main').width('99%');
-			});
-		});
 		$j(function() {
 			var add_new_mode = (!$j('input[name=SelectedID]').val());
 			var embedded_mode = ($j('input[name=Embedded]').val() == 1);
 
+			/* auto-close embedded page? */
+			var autoclose_mode = ($j('input[name=AutoClose]').val() == 1);
+			var record_added_ok = (location.search.split('record-added-ok=').length == 2);
+			var record_updated_ok = (location.search.split('record-updated-ok=').length == 2);
+			if((record_added_ok || record_updated_ok) && embedded_mode && autoclose_mode){
+				setTimeout(function(){
+					window.parent.jQuery('.modal').modal('hide');
+				}, 2000);
+			}
+
+			bkLib.onDomLoaded(function(){
+				if($j('textarea#Instructions').length) new nicEditor({ fullPanel : true }).panelInstance('Instructions');
+				if($j('textarea#Description').length) new nicEditor({ fullPanel : true }).panelInstance('Description');
+
+				$j('.nicEdit-panelContain').parent().width('90%');
+				$j('.nicEdit-panelContain').parent().next().width('88%');
+				$j('.nicEdit-main').width('99%');
+			});
 			$j('select, input[type=text], textarea').not(':disabled').eq(0).focus();
 			$j('form').eq(0).change(function(){
 				if($j(this).data('already_changed')) return;
@@ -162,7 +186,7 @@
 
 			if(!embedded_mode){
 				/* add a horizontal spacer to [add new parent] buttons that don't have a spacered element before them */
-				$j('.add_new_parent').prev(':not(.hspacer-lg)').next().addClass('hspacer-lg');
+				$j('.add_new_parent').prev(':not(.hspacer-md)').next().addClass('hspacer-md');
 
 				$j('.add_new_parent').click(function(){
 					var pt = $j(this).attr('id').replace(/_add_new$/, '');
@@ -220,6 +244,27 @@
 							break;
 					}
 
+				}
+			});
+
+			enforce_uniqueness('recipes', 'Name');
+
+			/* load admin tools for admin user */
+			if(!add_new_mode){
+				$j('body').append('<div id="admin-tools-appendix"></div>');
+				$j('#admin-tools-appendix').load(
+					'ajax_admin_tools.php?table=recipes&id=<%%URLVALUE(RecipeID)%%>',
+					function(resp){
+						if(!resp.length) return;
+						$j.ajax('ajax_admin_tools.php?action=get_admin_tools_js&table=recipes&id=<%%URLVALUE(RecipeID)%%>');
+					}
+				);
+			}
+
+			/* warn user if 'add new' clicked while unsaved changes exist */
+			$j('#addNew').click(function(){
+				if($j('#deselect.btn-warning').length){
+					return confirm('<%%TRANSLATION(discard changes confirm)%%>');
 				}
 			});
 

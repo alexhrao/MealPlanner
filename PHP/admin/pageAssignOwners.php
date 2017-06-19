@@ -2,10 +2,12 @@
 	@set_time_limit(0);
 	$currDir = dirname(__FILE__);
 	require("{$currDir}/incCommon.php");
+	$GLOBALS['page_title'] = $Translation['data ownership assign'];
 	include("{$currDir}/incHeader.php");
 
 	// get a list of tables
 	$arrTables = getTableList();
+	$arrTablesNoOwners = array();
 
 	// get a list of tables with records that have no owners
 	foreach($arrTables as $tn => $tc){
@@ -79,20 +81,20 @@
 
 ?>
 
-<div class="page-header"><h1><?php echo  $Translation['data ownership assign'] ; ?></h1></div>
+<div class="page-header"><h1><?php echo $Translation['data ownership assign']; ?></h1></div>
 
 <?php
 
 	// if all records of all tables have owners, no need to continue
 	if(!is_array($arrTablesNoOwners)){
-		echo "<div class=\"status\">{$Translation['records ownership done']}</div>";
+		echo "<div class=\"alert alert-success\"><i class=\"glyphicon glyphicon-ok\"></i> {$Translation['records ownership done']}</div>";
 		include("$currDir/incFooter.php");
 		exit;
 	}
 
 	// show status of previous assignments
 	if($status!=''){
-		echo"<div class=\"status\">$status</div>";
+		echo"<div class=\"alert alert-danger\">$status</div>";
 	}
 
 	// compose groups drop-down
@@ -149,10 +151,10 @@
 
 	<div class="table-responsive"><table class="table">
 		<thead><tr>
-			<th><div class="ColCaption"><?php echo  $Translation["table"] ; ?></div></th>
-			<th><div class="ColCaption"><?php echo  $Translation["records with no owners"] ; ?></div></th>
-			<th><div class="ColCaption"><?php echo  $Translation["new owner group"] ; ?></div></th>
-			<th><div class="ColCaption"><?php echo  $Translation["new owner member"] ; ?></div></th>
+			<th><?php echo  $Translation["table"] ; ?></th>
+			<th><?php echo  $Translation["records with no owners"] ; ?></th>
+			<th><?php echo  $Translation["new owner group"] ; ?></th>
+			<th><?php echo  $Translation["new owner member"] ; ?></th>
 		</tr></thead>
 
 		<tbody>

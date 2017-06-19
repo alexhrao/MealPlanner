@@ -28,6 +28,10 @@ class Combo{
 
 		$HTML; // the resulting output HTML code to use
 
+	function __construct(){  // PHP 7 compatibility
+		$this->Combo();
+	}
+
 	function Combo(){ // Constructor function
 		$this->Class = 'form-control';
 		$this->SelectedClass = 'active';
@@ -113,7 +117,7 @@ class Combo{
 					$sel = '';
 				}
 
-				$this->HTML .= "<input id=\"$this->SelectName$j\" type=\"radio\" name=\"$this->SelectName\" value=\"{$this->ListData[$i]}\" $sel> <label for=\"$this->SelectName$j\">".str_replace('&amp;', '&', htmlspecialchars(stripslashes($this->ListItem[$i])))."</label>";
+				$this->HTML .= "<input id=\"$this->SelectName$j\" type=\"radio\" name=\"$this->SelectName\" value=\"{$this->ListData[$i]}\" $sel> <label for=\"$this->SelectName$j\">".str_replace('&amp;', '&', html_attr(stripslashes($this->ListItem[$i])))."</label>";
 				if(($i+$shift)%$this->RadiosPerLine){
 					$this->HTML .= $separator;
 				}else{

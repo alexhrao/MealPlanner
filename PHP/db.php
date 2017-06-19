@@ -51,45 +51,45 @@
 	function db_fetch_array($res){
 		switch(DATABASE){
 			case 'mysql':
-				return mysql_fetch_array($res);
+				return @mysql_fetch_array($res);
 			case 'mysqli':
-				return mysqli_fetch_array($res, MYSQLI_BOTH);
+				return @mysqli_fetch_array($res, MYSQLI_BOTH);
 		}
 	}
 
 	function db_fetch_assoc($res){
 		switch(DATABASE){
 			case 'mysql':
-				return mysql_fetch_assoc($res);
+				return @mysql_fetch_assoc($res);
 			case 'mysqli':
-				return mysqli_fetch_assoc($res);
+				return @mysqli_fetch_assoc($res);
 		}
 	}
 
 	function db_fetch_row($res){
 		switch(DATABASE){
 			case 'mysql':
-				return mysql_fetch_row($res);
+				return @mysql_fetch_row($res);
 			case 'mysqli':
-				return mysqli_fetch_row($res);
+				return @mysqli_fetch_row($res);
 		}
 	}
 
 	function db_num_fields($res){
 		switch(DATABASE){
 			case 'mysql':
-				return mysql_num_fields($res);
+				return @mysql_num_fields($res);
 			case 'mysqli':
-				return mysqli_num_fields($res);
+				return @mysqli_num_fields($res);
 		}
 	}
 
 	function db_num_rows($res){
 		switch(DATABASE){
 			case 'mysql':
-				return mysql_num_rows($res);
+				return @mysql_num_rows($res);
 			case 'mysqli':
-				return mysqli_num_rows($res);
+				return @mysqli_num_rows($res);
 		}
 	}
 
@@ -107,9 +107,9 @@
 		if(!$link) $link = db_link();
 		switch(DATABASE){
 			case 'mysql':
-				return mysql_query($query, $link);
+				return @mysql_query($query, $link);
 			case 'mysqli':
-				return mysqli_query($link, $query);
+				return @mysqli_query($link, $query);
 		}
 	}
 
@@ -126,9 +126,9 @@
 	function db_field_name($res, $field_offset){
 		switch(DATABASE){
 			case 'mysql':
-				return mysql_field_name($res, $field_offset);
+				return @mysql_field_name($res, $field_offset);
 			case 'mysqli':
-				$fo = mysqli_fetch_field_direct($res, $field_offset);
+				$fo = @mysqli_fetch_field_direct($res, $field_offset);
 				if($fo === false) return false;
 				return $fo->name;
 		}
@@ -137,9 +137,9 @@
 	function db_field_type($res, $field_offset){
 		switch(DATABASE){
 			case 'mysql':
-				return mysql_field_type($res, $field_offset);
+				return @mysql_field_type($res, $field_offset);
 			case 'mysqli':
-				$fo = mysqli_fetch_field_direct($res, $field_offset);
+				$fo = @mysqli_fetch_field_direct($res, $field_offset);
 				if($fo === false) return false;
 				return $fo->type;
 		}

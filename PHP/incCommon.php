@@ -12,6 +12,8 @@
 		getTablePermissions($tn) -- returns an array of permissions allowed for logged member to given table (allowAccess, allowInsert, allowView, allowEdit, allowDelete) -- allowAccess is set to true if any access level is allowed
 		get_sql_fields($tn) -- returns the SELECT part of the table view query
 		get_sql_from($tn[, true]) -- returns the FROM part of the table view query, with full joins, optionally skipping permissions if true passed as 2nd param.
+		get_joined_record($table, $id[, true]) -- returns assoc array of record values for given PK value of given table, with full joins, optionally skipping permissions if true passed as 3rd param.
+		get_defaults($table) -- returns assoc array of table fields as array keys and default values (or empty), excluding automatic values as array values
 		htmlUserBar() -- returns html code for displaying user login status to be used on top of pages.
 		showNotifications($msg, $class) -- returns html code for displaying a notification. If no parameters provided, processes the GET request for possible notifications.
 		parseMySQLDate(a, b) -- returns a if valid mysql date, or b if valid mysql date, or today if b is true, or empty if b is false.
@@ -26,15 +28,12 @@
 		htmlspecialchars_decode($text) -- inverse of htmlspecialchars()
 		entitiesToUTF8($text) -- convert unicode entities (e.g. &#1234;) to actual UTF8 characters, requires multibyte string PHP extension
 		func_get_args_byref() -- returns an array of arguments passed to a function, by reference
-		html_attr($str) -- prepare $str to be placed inside an HTML attribute
 		permissions_sql($table, $level) -- returns an array containing the FROM and WHERE additions for applying permissions to an SQL query
 		error_message($msg[, $back_url]) -- returns html code for a styled error message .. pass explicit false in second param to suppress back button
 		toMySQLDate($formattedDate, $sep = datalist_date_separator, $ord = datalist_date_format)
-		highlight($needle, $haystack) -- returns html of haystack where needle is wrapped in highlight span
 		reIndex(&$arr) -- returns a copy of the given array, with keys replaced by 1-based numeric indices, and values replaced by original keys
 		get_embed($provider, $url[, $width, $height, $retrieve]) -- returns embed code for a given url (supported providers: youtube, googlemap)
 		check_record_permission($table, $id, $perm = 'view') -- returns true if current user has the specified permission $perm ('view', 'edit' or 'delete') for the given recors, false otherwise
-		sql($query, $o) -- executes given $query and returns its result set. $o is an options array (see the function definition for details)
 		NavMenus($options) -- returns the HTML code for the top navigation menus. $options is not implemented currently.
 		StyleSheet() -- returns the HTML code for included style sheet files to be placed in the <head> section.
 		getUploadDir($dir) -- if dir is empty, returns upload dir configured in defaultLang.php, else returns $dir.
@@ -145,7 +144,7 @@
 		$sql_fields = array(   
 			'mealdates' => "`mealdates`.`MealDateID` as 'MealDateID', IF(    CHAR_LENGTH(`meals1`.`Name`), CONCAT_WS('',   `meals1`.`Name`), '') as 'MealID', if(`mealdates`.`MealDate`,date_format(`mealdates`.`MealDate`,'%m/%d/%Y'),'') as 'MealDate', `mealdates`.`MealTime` as 'MealTime'",
 			'meals' => "`meals`.`MealID` as 'MealID', `meals`.`Name` as 'Name', `meals`.`Description` as 'Description', `meals`.`MealTime` as 'MealTime'",
-			'recipes' => "`recipes`.`RecipeID` as 'RecipeID', `recipes`.`Name` as 'Name', if(`recipes`.`DateCreated`,date_format(`recipes`.`DateCreated`,'%m/%d/%Y'),'') as 'DateCreated', `recipes`.`Instructions` as 'Instructions', `recipes`.`Description` as 'Description', IF(    CHAR_LENGTH(`sources1`.`FullName`), CONCAT_WS('',   `sources1`.`FullName`), '') as 'SourceID'",
+			'recipes' => "`recipes`.`RecipeID` as 'RecipeID', `recipes`.`Name` as 'Name', if(`recipes`.`DateCreated`,date_format(`recipes`.`DateCreated`,'%m/%d/%Y'),'') as 'DateCreated', `recipes`.`Instructions` as 'Instructions', `recipes`.`Description` as 'Description', IF(    CHAR_LENGTH(`sources1`.`FullName`), CONCAT_WS('',   `sources1`.`FullName`), '') as 'SourceID', TIME_FORMAT(`recipes`.`PrepTime`, '%r') as 'PrepTime', `recipes`.`Servings` as 'Servings'",
 			'ingredients' => "`ingredients`.`IngredientID` as 'IngredientID', `ingredients`.`Name` as 'Name', `ingredients`.`PricingUnit` as 'PricingUnit', `ingredients`.`RecipeUnit` as 'RecipeUnit', `ingredients`.`PluralForm` as 'PluralForm', `ingredients`.`Description` as 'Description'",
 			'mealrecipes' => "`mealrecipes`.`MealRecipeID` as 'MealRecipeID', IF(    CHAR_LENGTH(`meals1`.`Name`), CONCAT_WS('',   `meals1`.`Name`), '') as 'MealID', IF(    CHAR_LENGTH(`recipes1`.`Name`), CONCAT_WS('',   `recipes1`.`Name`), '') as 'RecipeID'",
 			'recipeingredients' => "`recipeingredients`.`RecipeIngredientID` as 'RecipeIngredientID', IF(    CHAR_LENGTH(`recipes1`.`Name`), CONCAT_WS('',   `recipes1`.`Name`), '') as 'RecipeID', IF(    CHAR_LENGTH(`ingredients1`.`Name`), CONCAT_WS('',   `ingredients1`.`Name`), '') as 'IngredientID', `recipeingredients`.`Amount` as 'Amount'",
@@ -210,11 +209,101 @@
 
 	#########################################################
 
+	function get_joined_record($table, $id, $skip_permissions = false){
+		$sql_fields = get_sql_fields($table);
+		$sql_from = get_sql_from($table, $skip_permissions);
+
+		if(!$sql_fields || !$sql_from) return false;
+
+		$pk = getPKFieldName($table);
+		if(!$pk) return false;
+
+		$safe_id = makeSafe($id, false);
+		$sql = "SELECT {$sql_fields} FROM {$sql_from} AND `{$table}`.`{$pk}`='{$safe_id}'";
+		$eo['silentErrors'] = true;
+		$res = sql($sql, $eo);
+		if($row = db_fetch_assoc($res)) return $row;
+
+		return false;
+	}
+
+	#########################################################
+
+	function get_defaults($table){
+		/* array of tables and their fields, with default values (or empty), excluding automatic values */
+		$defaults = array(
+			'mealdates' => array(
+				'MealDateID' => '',
+				'MealID' => '',
+				'MealDate' => '',
+				'MealTime' => 'Dinner'
+			),
+			'meals' => array(
+				'MealID' => '',
+				'Name' => '',
+				'Description' => '',
+				'MealTime' => ''
+			),
+			'recipes' => array(
+				'RecipeID' => '',
+				'Name' => '',
+				'DateCreated' => '',
+				'Instructions' => '',
+				'Description' => '',
+				'SourceID' => '',
+				'PrepTime' => '00:00:00',
+				'Servings' => '0'
+			),
+			'ingredients' => array(
+				'IngredientID' => '',
+				'Name' => '',
+				'PricingUnit' => '',
+				'RecipeUnit' => '',
+				'PluralForm' => '',
+				'Description' => ''
+			),
+			'mealrecipes' => array(
+				'MealRecipeID' => '',
+				'MealID' => '',
+				'RecipeID' => ''
+			),
+			'recipeingredients' => array(
+				'RecipeIngredientID' => '',
+				'RecipeID' => '',
+				'IngredientID' => '',
+				'Amount' => '0.00'
+			),
+			'ingredientstores' => array(
+				'IngredientStoreID' => '',
+				'IngredientID' => '',
+				'StoreID' => '',
+				'Cost' => ''
+			),
+			'sources' => array(
+				'SourceID' => '',
+				'FullName' => '',
+				'PhoneNumber' => '',
+				'Description' => ''
+			),
+			'stores' => array(
+				'StoreID' => '',
+				'Name' => '',
+				'PhoneNumber' => '',
+				'Location' => '',
+				'Notes' => ''
+			)
+		);
+
+		return isset($defaults[$table]) ? $defaults[$table] : array();
+	}
+
+	#########################################################
+
 	function getLoggedGroupID(){
 		if($_SESSION['memberGroupID']!=''){
 			return $_SESSION['memberGroupID'];
 		}else{
-			setAnonymousAccess();
+			if(!setAnonymousAccess()) return false;
 			return getLoggedGroupID();
 		}
 	}
@@ -225,7 +314,7 @@
 		if($_SESSION['memberID']!=''){
 			return strtolower($_SESSION['memberID']);
 		}else{
-			setAnonymousAccess();
+			if(!setAnonymousAccess()) return false;
 			return getLoggedMemberID();
 		}
 	}
@@ -234,12 +323,24 @@
 
 	function setAnonymousAccess(){
 		$adminConfig = config('adminConfig');
+		$anon_group_safe = addslashes($adminConfig['anonymousGroup']);
+		$anon_user_safe = strtolower(addslashes($adminConfig['anonymousMember']));
 
-		$anonGroupID=sqlValue("select groupID from membership_groups where name='".$adminConfig['anonymousGroup']."'");
-		$_SESSION['memberGroupID']=($anonGroupID ? $anonGroupID : 0);
+		$eo = array('silentErrors' => true);
 
-		$anonMemberID=sqlValue("select lcase(memberID) from membership_users where lcase(memberID)='".strtolower($adminConfig['anonymousMember'])."' and groupID='$anonGroupID'");
-		$_SESSION['memberID']=($anonMemberID ? $anonMemberID : 0);
+		$res = sql("select groupID from membership_groups where name='{$anon_group_safe}'", $eo);
+		if(!$res){ return false; }
+		$row = db_fetch_array($res); $anonGroupID = $row[0];
+
+		$_SESSION['memberGroupID'] = ($anonGroupID ? $anonGroupID : 0);
+
+		$res = sql("select lcase(memberID) from membership_users where lcase(memberID)='{$anon_user_safe}' and groupID='{$anonGroupID}'", $eo);
+		if(!$res){ return false; }
+		$row = db_fetch_array($res); $anonMemberID = $row[0];
+
+		$_SESSION['memberID'] = ($anonMemberID ? $anonMemberID : 0);
+
+		return true;
 	}
 
 	#########################################################
@@ -332,13 +433,14 @@
 
 				<?php if(getLoggedAdmin()){ ?>
 					<ul class="nav navbar-nav">
-						<a href="<?php echo PREPEND_PATH; ?>admin/pageHome.php" class="btn btn-danger navbar-btn hidden-xs"><i class="glyphicon glyphicon-cog"></i> <?php echo $Translation['admin area']; ?></a>
-						<a href="<?php echo PREPEND_PATH; ?>admin/pageHome.php" class="btn btn-danger navbar-btn visible-xs btn-lg"><i class="glyphicon glyphicon-cog"></i> <?php echo $Translation['admin area']; ?></a>
+						<a href="<?php echo PREPEND_PATH; ?>admin/pageHome.php" class="btn btn-danger navbar-btn hidden-xs" title="<?php echo html_attr($Translation['admin area']); ?>"><i class="glyphicon glyphicon-cog"></i> <?php echo $Translation['admin area']; ?></a>
+						<a href="<?php echo PREPEND_PATH; ?>admin/pageHome.php" class="btn btn-danger navbar-btn visible-xs btn-lg" title="<?php echo html_attr($Translation['admin area']); ?>"><i class="glyphicon glyphicon-cog"></i> <?php echo $Translation['admin area']; ?></a>
 					</ul>
 				<?php } ?>
 
 				<?php if(!$_GET['signIn'] && !$_GET['loginFailed']){ ?>
 					<?php if(getLoggedMemberID() == $adminConfig['anonymousMember']){ ?>
+						<p class="navbar-text navbar-right">&nbsp;</p>
 						<a href="<?php echo PREPEND_PATH; ?>index.php?signIn=1" class="btn btn-success navbar-btn navbar-right"><?php echo $Translation['sign in']; ?></a>
 						<p class="navbar-text navbar-right">
 							<?php echo $Translation['not signed in']; ?>
@@ -356,6 +458,17 @@
 								<?php echo $Translation['signed as']; ?> <strong><a href="<?php echo PREPEND_PATH; ?>membership_profile.php" class="navbar-link"><?php echo getLoggedMemberID(); ?></a></strong>
 							</p>
 						</ul>
+						<script>
+							/* periodically check if user is still signed in */
+							setInterval(function(){
+								$j.ajax({
+									url: '<?php echo PREPEND_PATH; ?>ajax_check_login.php',
+									success: function(username){
+										if(!username.length) window.location = '<?php echo PREPEND_PATH; ?>index.php?signIn=1';
+									}
+								});
+							}, 60000);
+						</script>
 					<?php } ?>
 				<?php } ?>
 			</div>
@@ -673,14 +786,14 @@
 
 			$filterJS.="\n\n// code for filtering {$filterable} by {$filterer}\n";
 			$filterJS.="\nvar {$filterable}_data_by_{$filterer} = {$jsonFilterableDataByFilterer[$filterer]}; ";
-			$filterJS.="\nvar selected_{$filterable} = \$F('{$filterable}');";
+			$filterJS.="\nvar selected_{$filterable} = \$j('#{$filterable}').val();";
 			$filterJS.="\nvar {$filterable}_change_by_{$filterer} = function(){";
 			$filterJS.="\n\t$('{$filterable}').options.length=0;";
 			$filterJS.="\n\t$('{$filterable}').options[0] = new Option();";
-			$filterJS.="\n\tif(\$F('{$filterer}')){";
-			$filterJS.="\n\t\tfor({$filterable}_item in {$filterable}_data_by_{$filterer}[\$F('{$filterer}')]){";
+			$filterJS.="\n\tif(\$j('#{$filterer}').val()){";
+			$filterJS.="\n\t\tfor({$filterable}_item in {$filterable}_data_by_{$filterer}[\$j('#{$filterer}').val()]){";
 			$filterJS.="\n\t\t\t$('{$filterable}').options[$('{$filterable}').options.length] = new Option(";
-			$filterJS.="\n\t\t\t\t{$filterable}_data_by_{$filterer}[\$F('{$filterer}')][{$filterable}_item],";
+			$filterJS.="\n\t\t\t\t{$filterable}_data_by_{$filterer}[\$j('#{$filterer}').val()][{$filterable}_item],";
 			$filterJS.="\n\t\t\t\t{$filterable}_item,";
 			$filterJS.="\n\t\t\t\t({$filterable}_item == selected_{$filterable} ? true : false),";
 			$filterJS.="\n\t\t\t\t({$filterable}_item == selected_{$filterable} ? true : false)";
@@ -695,7 +808,7 @@
 			$filterJS.="\n\t\t\t\t({$filterable}_item == selected_{$filterable} ? true : false)";
 			$filterJS.="\n\t\t\t);";
 			$filterJS.="\n\t\t}";
-			$filterJS.="\n\t\tif(selected_{$filterable} && selected_{$filterable} == \$F('{$filterable}')){";
+			$filterJS.="\n\t\tif(selected_{$filterable} && selected_{$filterable} == \$j('#{$filterable}').val()){";
 			$filterJS.="\n\t\t\tfor({$filterer}_item in {$filterable}_data_by_{$filterer}){";
 			$filterJS.="\n\t\t\t\tfor({$filterable}_item in {$filterable}_data_by_{$filterer}[{$filterer}_item]){";
 			$filterJS.="\n\t\t\t\t\tif({$filterable}_item == selected_{$filterable}){";
@@ -761,12 +874,6 @@
 
 	#########################################################
 
-	function html_attr($str) {
-		return htmlspecialchars($str, ENT_QUOTES, 'iso-8859-1');
-	}
-
-	#########################################################
-
 	function permissions_sql($table, $level = 'all'){
 		if(!in_array($level, array('user', 'group'))){ $level = 'all'; }
 		$perm = getTablePermissions($table);
@@ -791,13 +898,14 @@
 
 	#########################################################
 
-	function error_message($msg, $back_url = ''){
+	function error_message($msg, $back_url = '', $full_page = true){
 		$curr_dir = dirname(__FILE__);
 		global $Translation;
 
 		ob_start();
 
-		include_once($curr_dir . '/header.php');
+		if($full_page) include_once($curr_dir . '/header.php');
+
 		echo '<div class="panel panel-danger">';
 			echo '<div class="panel-heading"><h3 class="panel-title">' . $Translation['error:'] . '</h3></div>';
 			echo '<div class="panel-body"><p class="text-danger">' . $msg . '</p>';
@@ -812,7 +920,8 @@
 			}
 			echo '</div>';
 		echo '</div>';
-		include_once($curr_dir . '/footer.php');
+
+		if($full_page) include_once($curr_dir . '/footer.php');
 
 		$out = ob_get_contents();
 		ob_end_clean();
@@ -827,13 +936,6 @@
 		$de=explode($sep, $formattedDate);
 		$mySQLDate=intval($de[strpos($ord, 'Y')]).'-'.intval($de[strpos($ord, 'm')]).'-'.intval($de[strpos($ord, 'd')]);
 		return $mySQLDate;
-	}
-
-	#########################################################
-
-	function highlight($needle, $haystack){
-		$needle = preg_quote($needle, "/");
-		return preg_replace("/(?!<.*?)({$needle})(?![^<>]*?>)/i", '<span class="search_highlight">\1</span>', $haystack);
 	}
 
 	#########################################################
@@ -891,7 +993,7 @@
 	function get_embed_googlemap($url, $max_width = '', $max_height = '', $retrieve = 'html'){
 		global $Translation;
 		$url_parts = parse_url($url);
-		$coords_regex = '/-?\d+(\.\d+)?[,+]-?\d+(\.\d+)?(,\d{1,2}z)?/'; /* http://stackoverflow.com/questions/2660201 */
+		$coords_regex = '/-?\d+(\.\d+)?[,+]-?\d+(\.\d+)?(,\d{1,2}z)?/'; /* https://stackoverflow.com/questions/2660201 */
 
 		if(preg_match($coords_regex, $url_parts['path'] . '?' . $url_parts['query'], $m)){
 			list($lat, $long, $zoom) = explode(',', $m[0]);
@@ -900,9 +1002,9 @@
 			if(!$max_height) $max_height = 360;
 			if(!$max_width) $max_width = 480;
 
-			$api_key = 'AIzaSyDzwFML3rnUIGtsvcjYqC0pQBShBCeUV8E';
+			$api_key = '';
 			$embed_url = "https://www.google.com/maps/embed/v1/view?key={$api_key}&center={$lat},{$long}&zoom={$zoom}&maptype=roadmap";
-			$thumbnail_url = "https://maps.googleapis.com/maps/api/staticmap?center={$lat},{$long}&zoom={$zoom}&maptype=roadmap&size={$max_width}x{$max_height}";
+			$thumbnail_url = "https://maps.googleapis.com/maps/api/staticmap?key={$api_key}&center={$lat},{$long}&zoom={$zoom}&maptype=roadmap&size={$max_width}x{$max_height}";
 
 			if($retrieve == 'html'){
 				return "<iframe width=\"{$max_width}\" height=\"{$max_height}\" frameborder=\"0\" style=\"border:0\" src=\"{$embed_url}\"></iframe>";
@@ -987,65 +1089,9 @@
 
 	#########################################################
 
-	function sql($statment, &$o){
-
-		/*
-			Supported options that can be passed in $o options array (as array keys):
-			'silentErrors': If true, errors will be returned in $o['error'] rather than displaying them on screen and exiting.
-		*/
-
-		global $Translation;
-		static $connected = false, $db_link;
-
-		$dbServer = config('dbServer');
-		$dbUsername = config('dbUsername');
-		$dbPassword = config('dbPassword');
-		$dbDatabase = config('dbDatabase');
-
-		ob_start();
-
-		if(!$connected){
-			/****** Connect to MySQL ******/
-			if(!extension_loaded('mysql') && !extension_loaded('mysqli')){
-				echo error_message('PHP is not configured to connect to MySQL on this machine. Please see <a href="http://www.php.net/manual/en/ref.mysql.php">this page</a> for help on how to configure MySQL.');
-				$e=ob_get_contents(); ob_end_clean(); if($o['silentErrors']){ $o['error']=$e; return FALSE; }else{ echo $e; exit; }
-			}
-
-			if(!($db_link = @db_connect($dbServer, $dbUsername, $dbPassword))){
-				echo error_message(db_error($db_link, true));
-				$e=ob_get_contents(); ob_end_clean(); if($o['silentErrors']){ $o['error']=$e; return FALSE; }else{ echo $e; exit; }
-			}
-
-			/****** Select DB ********/
-			if(!db_select_db($dbDatabase, $db_link)){
-				echo error_message(db_error($db_link));
-				$e=ob_get_contents(); ob_end_clean(); if($o['silentErrors']){ $o['error']=$e; return FALSE; }else{ echo $e; exit; }
-			}
-
-			$connected = true;
-		}
-
-		if(!$result = @db_query($statment, $db_link)){
-			if(!stristr($statment, "show columns")){
-				// retrieve error codes
-				$errorNum = db_errno($db_link);
-				$errorMsg = db_error($db_link);
-
-				echo error_message(htmlspecialchars($errorMsg) . "\n\n<!--\n" . $Translation['query:'] . "\n $statment\n-->\n\n");
-				$e = ob_get_contents(); ob_end_clean(); if($o['silentErrors']){ $o['error'] = $errorMsg; return false; }else{ echo $e; exit; }
-			}
-		}
-
-		ob_end_clean();
-		return $result;
-	}
-
-	#########################################################
-
 	function NavMenus($options = array()){
 		if(!defined('PREPEND_PATH')) define('PREPEND_PATH', '');
 		global $Translation;
-		$menu = array();
 		$prepend_path = PREPEND_PATH;
 
 		/* default options */
@@ -1057,8 +1103,9 @@
 
 		$table_group_name = array_keys(get_table_groups()); /* 0 => group1, 1 => group2 .. */
 		/* if only one group named 'None', set to translation of 'select a table' */
-		if(count($table_group_name) == 1 && $table_group_name[0] == 'None') $table_group_name[0] = $Translation['select a table'];
+		if((count($table_group_name) == 1 && $table_group_name[0] == 'None') || count($table_group_name) < 1) $table_group_name[0] = $Translation['select a table'];
 		$table_group_index = array_flip($table_group_name); /* group1 => 0, group2 => 1 .. */
+		$menu = array_fill(0, count($table_group_name), '');
 
 		$t = time();
 		$arrTables = getTableList();
@@ -1066,7 +1113,6 @@
 			foreach($arrTables as $tn => $tc){
 				/* ---- list of tables where hide link in nav menu is set ---- */
 				$tChkHL = array_search($tn, array('mealrecipes','recipeingredients','ingredientstores'));
-				if($tChkHL !== false && $tChkHL !== null) continue;
 
 				/* ---- list of tables where filter first is set ---- */
 				$tChkFF = array_search($tn, array());
@@ -1078,7 +1124,7 @@
 
 				/* when no groups defined, $table_group_index['None'] is NULL, so $menu_index is still set to 0 */
 				$menu_index = intval($table_group_index[$tc[3]]);
-				$menu[$menu_index] .= "<li><a href=\"{$prepend_path}{$tn}_view.php?t={$t}{$searchFirst}\"><img src=\"{$prepend_path}" . ($tc[2] ? $tc[2] : 'blank.gif') . "\" height=\"32\"> {$tc[0]}</a></li>";
+				if(!$tChkHL && $tChkHL !== 0) $menu[$menu_index] .= "<li><a href=\"{$prepend_path}{$tn}_view.php?t={$t}{$searchFirst}\"><img src=\"{$prepend_path}" . ($tc[2] ? $tc[2] : 'blank.gif') . "\" height=\"32\"> {$tc[0]}</a></li>";
 			}
 		}
 
@@ -1231,7 +1277,7 @@ EOT;
 				<div class="col-xs-12 <?php echo $link['grid_column_classes']; ?>">
 					<div class="panel <?php echo $link['panel_classes']; ?>">
 						<div class="panel-body">
-							<a class="btn btn-block btn-lg <?php echo $link['link_classes']; ?>" title="<?php echo preg_replace("/&amp;(#[0-9]+|[a-z]+);/i", "&$1;", htmlspecialchars(strip_tags($link['description']))); ?>" href="<?php echo $link['url']; ?>"><?php echo ($link['icon'] ? '<img src="' . $link['icon'] . '">' : ''); ?><strong><?php echo $link['title']; ?></strong></a>
+							<a class="btn btn-block btn-lg <?php echo $link['link_classes']; ?>" title="<?php echo preg_replace("/&amp;(#[0-9]+|[a-z]+);/i", "&$1;", html_attr(strip_tags($link['description']))); ?>" href="<?php echo $link['url']; ?>"><?php echo ($link['icon'] ? '<img src="' . $link['icon'] . '">' : ''); ?><strong><?php echo $link['title']; ?></strong></a>
 							<div class="panel-body-description"><?php echo $link['description']; ?></div>
 						</div>
 					</div>

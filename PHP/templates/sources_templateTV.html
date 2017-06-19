@@ -1,10 +1,10 @@
 <!-- Edit this file to change the layout of each record in the table view -->
-<!-- To disable clicking of a field, remove the <%%select%%> and <%%endselect%%> formatters around it-->
+<!-- To disable clicking of a field, remove the <%%SELECT%%> and <%%ENDSELECT%%> formatters around it-->
 
 <!-- If you wish to hide the table view header that contains the column titles, -->
-<!-- open the generated 'sources_view.php' file in your text editor and -->
-<!-- change the value of $x->ShowTableHeader to 0 -->
+<!-- add the following to the sources_init() hook (in hooks/sources.php file) -->
+<!--     $options->ShowTableHeader = 0;     -->
 
-		<td id="sources-FullName-<%%VALUE(SourceID)%%>" class="sources-FullName "><%%SELECT%%><%%VALUE(FullName)%%><%%ENDSELECT%%></td>
-		<td id="sources-PhoneNumber-<%%VALUE(SourceID)%%>" class="sources-PhoneNumber "><%%SELECT%%><%%VALUE(PhoneNumber)%%><%%ENDSELECT%%></td>
-		<td id="sources-Description-<%%VALUE(SourceID)%%>" class="sources-Description "><%%SELECT%%><%%VALUE(Description)%%><%%ENDSELECT%%></td>
+		<td id="sources-FullName-<%%VALUE(SourceID)%%>" class="sources-FullName"><%%SELECT%%><%%VALUE(FullName)%%><%%ENDSELECT%%></td>
+		<td id="sources-PhoneNumber-<%%VALUE(SourceID)%%>" class="sources-PhoneNumber"><%%SELECT%%><%%VALUE(PhoneNumber)%%><%%ENDSELECT%%></td>
+		<td id="sources-Description-<%%VALUE(SourceID)%%>" class="sources-Description"><%%SELECT%%><%%VALUE(Description)%%><%%ENDSELECT%%></td>

@@ -5,7 +5,7 @@
 	// When translating, only translate the strings that are
 	// TO THE RIGHT OF the equal sign (=).
 	//
-	// Do NOT translate the strings between square brackets ([])
+	// Do NOT translate the strings between square brackets ([]) or <>
 	//
 	// Also, leave the text between < and > untranslated.
 	//
@@ -282,7 +282,7 @@
 	$Translation['automatically approve members'] = "Sign-up allowed, and automatically approve members.";
 	$Translation['anonymous group'] = "Name of the anonymous<br>group";
 	$Translation['anonymous user name'] = "Name of the anonymous<br>user";
-	$Translation['hide twitter feed'] = "Hide Twitter feed<br>in admin homepage?";
+	$Translation['hide twitter feed'] = "Hide Twitter feed in admin homepage?";
 	$Translation['twitter feed'] = "Our Twitter feed helps keep you informed of our latest news, useful resources, new releases, and many other helpful tips.";
 	
 	//pageTransferOwnership.php
@@ -428,3 +428,48 @@
 	$Translation['sure delete record'] = "Are you sure you want to delete this record?";
 	$Translation['delete record'] = "Delete this record";
 	$Translation['displaying records'] = "Displaying records <RECORDNUM1> to <RECORDNUM2> of <RECORDS>";
+
+	/* Added in AppGini 5.51 */
+	$Translation['maintenance mode admin notification'] = 'Maintenance mode is enabled! You can disable it from the admin home page.';
+	$Translation['maintenance mode message'] = 'Maintenance mode message';
+	$Translation['maintenance mode'] = 'Maintenance mode';
+	$Translation['OFF'] = 'OFF';
+	$Translation['ON'] = 'ON';
+	$Translation['enable maintenance mode?'] = 'Are you sure you want to enable maintenance mode? Only admin users can access the site in this mode!';
+	$Translation['disable maintenance mode?'] = 'Are you sure you want to disable maintenance mode? All users will be able to access the site!';
+	
+	/* Added in AppGini 5.60 */
+	$Translation['csv file upload error'] = 'An error occured while processing the requested CSV file.';
+	$Translation['back and retry'] = 'Go back and retry';
+	$Translation['upload or choose csv file'] = 'Upload a CSV file or open an existing one';
+	$Translation['choose csv upload'] = 'Choose a CSV file to upload';
+	$Translation['no file chosen yet'] = 'No file chosen yet';
+	$Translation['start upload'] = 'Start upload';
+	$Translation['select a table'] = 'Select a table';
+	$Translation['error reading csv data'] = 'An error occured while reading CSV data. Try resetting/adjusting the CSV settings.';
+	$Translation['belongs to'] = 'Belongs to';
+	$Translation['skip column'] = 'Skip this column';
+	$Translation['connection failed retrying'] = 'Connection failed. Retrying in <SECONDS> seconds ...';
+	$Translation['connection failed timeout'] = 'Connection timed out. Retry later.';
+	$Translation['sure delete csv'] = 'Are you sure you want to delete the CSV file [CSVFILE] from the server?';
+	$Translation['invalid csv file selected'] = 'Invalid file chosen. Must be a CSV file.';
+	$Translation['couldnt delete csv file'] = 'Couldn\'t delete this CSV file.';
+	$Translation['error backing up table'] = 'Error: Couldn\'t back up table <TABLE>.';
+	$Translation['no columns selected'] = 'Please select at least one column to import and make sure each selected column belongs to a UNIQUE field.';
+	$Translation['csrf token expired or invalid'] = 'Oops! Something went wrong with this page. Please go back and retry.';
+	$Translation['back to groups'] = 'Back to groups';
+	$Translation['member updated'] = "Member <USERNAME> updated successfully";
+	$Translation['fix errors before submitting'] = 'Please fix the highlighted errors before submitting the page!';
+
+	/* Added in AppGini 5.62 */
+	$Translation['mail_function'] = 'Method of sending emails';
+	$Translation['smtp_server'] = 'SMTP server';
+	$Translation['smtp_encryption'] = 'SMTP encryption';
+	$Translation['smtp_port'] = 'SMTP port';
+	$Translation['smtp_port_hint'] = 'Typical values are 25 (for non-encrypted SMTP), 465 (used in many cases with SSL encryption) or 587 (typical with TLS encryption)';
+	$Translation['smtp_user'] = 'SMTP username';
+	$Translation['smtp_pass'] = 'SMTP password';
+	$Translation['configure mail settings'] = 'Configure mail settings';
+	$Translation['display debugging info'] = 'Display debugging info';
+	$Translation['debugging info hint'] = 'Debugging info is useful if you are having trouble sending emails through the configured SMTP server';
+	
