@@ -115,7 +115,6 @@ function getOffset($month, $year) {
 	$year = (int)$year;
 	$firstOfMonth = mktime(1, 1, 1, $month, 1, $year);
 	$info = getdate($firstOfMonth);
-	echo "<p>" . $info['wday'] . "</p>";
 	return $info['wday'];
 }
 
