@@ -6,6 +6,8 @@ CREATE TABLE Recipes(
 	DateCreated datetime NULL,
 	Instructions nvarchar(2000) NULL,
 	Description nvarchar(2000) NULL,
+	ServeTime time(0) NULL,
+	Servings tinyint(2) unsigned zerofill NULL,
 	SourceID int NULL,
  CONSTRAINT PK_Recipes PRIMARY KEY CLUSTERED 
 (
