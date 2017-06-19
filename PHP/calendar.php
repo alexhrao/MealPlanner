@@ -70,8 +70,53 @@ function leapYear($year) {
 	}
 }
 
-function offsetDay($month) {
-
+function getOffset($month, $year) {
+	switch ($month) {
+		case 'January':
+			$month = 1;
+			break;
+		case 'February':
+			$month = 2;
+			break;
+		case 'March':
+			$month = 3;
+			break;
+		case 'April':
+			$month = 4;
+			break;
+		case 'May':
+			$month = 5;
+			break;
+		case 'June':
+			$month = 6;
+			break;
+		case 'July':
+			$month = 7;
+			break;
+		case 'August':
+			$month = 8;
+			break;
+		case 'September':
+			$month = 9;
+			break;
+		case 'October':
+			$month = 10;
+			break;
+		case 'November':
+			$month = 11;
+			break;
+		case 'December':
+			$month = 12;
+			break;
+		default:
+			return 0;
+			break;
+	}
+	$year = (int)$year;
+	$firstOfMonth = mktime(1, 1, 1, $month, 1, $year);
+	$info = getdate($firstOfMonth);
+	echo "<p>" . $info['wday'] . "</p>";
+	return $info['wday'];
 }
 
 $dir = dirname(__FILE__);
@@ -125,7 +170,11 @@ echo '</div>';
 $arrInfo = getMealInformation();
 
 echo "<table align=\"center\" border=\"5\" id=\"calendarTB\"><tr><td colspan=\"7\" text-align=\"center\"><em><strong>$month</strong></em></th></tr>";
-$offset = 4;
+
+
+
+$offset = getOffset($month, $year);
+
 for ($counter = 0; $counter < $offset; $counter++) {
 	echo "<td id=\"calendarTD\"><div class=\"content\"><br></div></td>";
 }
