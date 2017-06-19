@@ -18,11 +18,11 @@
 		'title' => "Calendar",
 		'description' => 'View when your meals are in a calendar view',
 		'groups' => '*',
-		'table_group' => 0,
 		'grid_column_classes' => 'col-sm-3',
 		'panel_classes' => 'panel-warning',
 		'link_classes' => 'btn-primary',
-		'icon' => 'resources/table_icons/calendar.png'
+		'icon' => 'resources/table_icons/calendar.png',
+		'table_group' => 'Meal Planner',
 	);
 
 	$homeLinks[] = array(
@@ -30,10 +30,10 @@
 		'title' => "Shopping List",
 		'description' => 'Generate a shopping list',
 		'groups' => '*',
-		'table_group' => 0,
 		'grid_column_classes' => 'col-sm-3',
 		'panel_classes' => 'panel-warning',
 		'link_classes' => 'btn-primary',
-		'icon' => 'resources/table_icons/list.png'
+		'icon' => 'resources/table_icons/list.png',
+		'table_group' => 'Meal Planner',
 	);
 ?>

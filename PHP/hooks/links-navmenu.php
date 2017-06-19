@@ -13,15 +13,15 @@
 	$navLinks[] = array(
 		'url' => '/calendar.php',
 		'title' => 'Calendar',
-		'table_group' => 0,
 		'groups' => '*',
-		'icon' => 'resources/table_icons/calendar.png'
+		'icon' => 'resources/table_icons/calendar.png',
+		'table_group' => 'Meal Planner',
 	);
 	$navLinks[] = array(
 		'url' => '/shoppingList.php',
 		'title' => 'Shopping List',
-		'table_group' => 0,
 		'groups' => '*',
-		'icon' => 'resources/table_icons/list.png'
+		'icon' => 'resources/table_icons/list.png',
+		'table_group' => 'Meal Planner',
 	);
 		?>
