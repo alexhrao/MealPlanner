@@ -178,7 +178,7 @@ $offset = getOffset($month, $year);
 for ($counter = 0; $counter < $offset; $counter++) {
 	echo "<td id=\"calendarTD\"><div class=\"content\"><br></div></td>";
 }
-for ($day=1; $day <= $arrMonths[$month][1]; $day++) { 
+for ($day = 1; $day <= $arrMonths[$month][1]; $day++) { 
 	if (($offset + $day) % 7 == 1) {
 		echo "<tr>";
 	}
@@ -218,7 +218,10 @@ if (($offset + $day - 1) % 7 != 0) {
 	if (array_key_exists($key, $arrInfo)) {
 		foreach ($arrInfo[$key] as $k => $meal) {
 			echo '<div id="tooltip">';
-			echo $arrAbr[$meal[1]] . ": $meal[0]<br>";
+			echo '<form name="calDetail" action="calDetail.php" method="post" target="_blank">';
+			echo "<input type=\"hidden\" name=\"MealID\" value=\"$meal[3]\">";
+			echo "<input id=\"calDetail\" type=\"submit\" name=\"calDetail\" value=\"";
+			echo $arrAbr[$meal[1]] . ": $meal[0]\"></form>";
 			echo '<div id="tooltiptext">' . $meal[2] . '</div></div>';
 		}
 	}
@@ -226,21 +229,22 @@ if (($offset + $day - 1) % 7 != 0) {
 	$day ++;
 	$i ++;
 }
+
 while (($offset + $day - 1) % 7 != 0) {
 	echo "<td id=\"calendarTD\"><div class=\"content\">$i";
 	$key = "$year-" . sprintf("%'.02u", $arrMonths[$month][0]) . "-" . sprintf("%'.02u", $i);
 	if (array_key_exists($key, $arrInfo)) {
 		foreach ($arrInfo[$key] as $k => $meal) {
 			echo '<div id="tooltip">';
-			echo $arrAbr[$meal[1]] . ": $meal[0]<br>";
+			echo '<form name="calDetail" action="calDetail.php" method="post" target="_blank">';
+			echo "<input type=\"hidden\" name=\"MealID\" value=\"$meal[3]\">";
+			echo "<input id=\"calDetail\" type=\"submit\" name=\"calDetail\" value=\"";
+			echo $arrAbr[$meal[1]] . ": $meal[0]\"></form>";
 			echo '<div id="tooltiptext">' . $meal[2] . '</div></div>';
 		}
 	}
 	echo "</div></td>";
-	if ($day % 7 == 0) {
-		echo "</tr>";
-		break;
-	}
+
 	$day ++;
 	$i ++;
 }
