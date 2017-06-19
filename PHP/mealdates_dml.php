@@ -27,7 +27,7 @@ function mealdates_insert(){
 	}
 	if($data['MealDate']== ''){
 		echo StyleSheet() . "\n\n<div class=\"alert alert-danger\">" . $Translation['error:'] . " 'Date': " . $Translation['field not null'] . '<br><br>';
-		echo '<a href="" onclick="history.go(-1); return false;">'.$Translation['< back'].'</a></div>';
+		echo '<a href="" onclick="history.go(-1); return false;">'.$Translation['< back'].'</ a></div>';
 		exit;
 	}
 
@@ -232,7 +232,7 @@ function mealdates_form($selected_id = '', $AllowUpdate = 1, $AllowInsert = 1, $
 			$AllowUpdate=0;
 		}
 
-		$res = sql("select * from `mealdates` where `MealDateID`='".makeSafe($selected_id)."'", $eo);
+		$res = sql("SELECT * from `mealdates` where `MealDateID`='".makeSafe($selected_id)."'", $eo);
 		if(!($row = db_fetch_array($res))){
 			return error_message($Translation['No records found']);
 		}

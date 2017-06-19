@@ -43,7 +43,7 @@ function getMealInformation() {
 			$arrDates[$prevDate] = $arrInfo;
 			$arrInfo = array();
 		}
-		$arrMeal = array($row['Name'], $row['MealTime'], $row['Description'], $row['MealID']);
+		$arrMeal = array(sanitizeString($row['Name']), $row['MealTime'], $row['Description'], $row['MealID']);
 		$arrInfo[] = $arrMeal;
 		$prevDate = $row['MealDate'];
 	}
@@ -116,6 +116,13 @@ function getOffset($month, $year) {
 	$firstOfMonth = mktime(1, 1, 1, $month, 1, $year);
 	$info = getdate($firstOfMonth);
 	return $info['wday'];
+}
+
+function sanitizeString($string) {
+	if (strlen($string) > 22) {
+		$string = substr($string, 0, 19) . "...";
+	}
+	return $string;
 }
 
 $dir = dirname(__FILE__);
