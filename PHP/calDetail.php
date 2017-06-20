@@ -50,23 +50,26 @@ function getMealInformation($MealID)
 	mysql_connect($dbServer, $dbUsername, $dbPassword);
 	mysql_select_db($dbDatabase) or die("Unable to select DB!");
 	$queryMeal = "SELECT meals.MealID, meals.Name, meals.Description FROM meals WHERE meals.MealID = $MealID;";
-	$queryRecipes = "SELECT recipes.RecipeID, recipes.Name, recipes.Instructions FROM meals INNER JOIN mealrecipes ON mealrecipes.MealID = meals.MealID INNER JOIN recipes ON recipes.RecipeID = mealrecipes.RecipeID WHERE mealrecipes.MealID = $MealID;";
+	$queryMealTime = "SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(recipes.PrepTime))) AS TotalTime FROM meals INNER JOIN mealrecipes ON mealrecipes.MealID = meals.MealID INNER JOIN recipes ON recipes.RecipeID = mealrecipes.RecipeID WHERE mealrecipes.MealID = $MealID;";
+	$queryRecipes = "SELECT recipes.RecipeID, recipes.Name, recipes.Instructions, recipes.PrepTime, recipes.Servings FROM meals INNER JOIN mealrecipes ON mealrecipes.MealID = meals.MealID INNER JOIN recipes ON recipes.RecipeID = mealrecipes.RecipeID WHERE mealrecipes.MealID = $MealID;";
+	$resultTime = mysql_query($queryMealTime);	
 	$resultMeal = mysql_query($queryMeal);
 	$resultRecipe = mysql_query($queryRecipes);
 	while ($row1 = mysql_fetch_assoc($resultMeal)) {
-		$arrMeal[$row1['MealID']] = array($row1['Name'], $row1['Description'], array());
+		$time = mysql_fetch_assoc($resultTime);
+		$arrMeal[$row1['MealID']] = array($row1['Name'], $row1['Description'], $time['TotalTime'], array());
 		$arrRecs = array();
 		while ($row2 = mysql_fetch_assoc($resultRecipe)) {
-			$arrRecs[$row2['RecipeID']] = array($row2['Name'], $row2['Instructions'], array());
+			$arrRecs[$row2['RecipeID']] = array($row2['Name'], $row2['Instructions'], $row2['PrepTime'], $row2['Servings'], array());
 		}
 		foreach ($arrRecs as $RecipeID => $info) {
-			$queryIngred = "SELECT ingredients.Name as Name, concat(recipeingredients.amount, \" \", ingredients.PricingUnit) AS Amount FROM meals INNER JOIN mealrecipes ON mealrecipes.MealID = meals.MealID INNER JOIN recipes ON recipes.RecipeID = mealrecipes.RecipeID INNER JOIN recipeIngredients ON recipeingredients.RecipeID = recipes.RecipeID INNER JOIN ingredients ON ingredients.IngredientID = recipeingredients.IngredientID WHERE mealrecipes.MealID = $MealID AND recipeingredients.RecipeID = $RecipeID;";
+			$queryIngred = "SELECT ingredients.Name AS Name, concat(recipeingredients.amount, \" \", ingredients.PricingUnit) AS Amount FROM meals INNER JOIN mealrecipes ON mealrecipes.MealID = meals.MealID INNER JOIN recipes ON recipes.RecipeID = mealrecipes.RecipeID INNER JOIN recipeIngredients ON recipeingredients.RecipeID = recipes.RecipeID INNER JOIN ingredients ON ingredients.IngredientID = recipeingredients.IngredientID WHERE mealrecipes.MealID = $MealID AND recipeingredients.RecipeID = $RecipeID;";
 			$resultIngred = mysql_query($queryIngred);
 			while ($row3 = mysql_fetch_assoc($resultIngred)) {
-				$arrRecs[$RecipeID][2][] = array($row3['Name'], $row3['Amount']);
+				$arrRecs[$RecipeID][4][] = array($row3['Name'], $row3['Amount']);
 			}
 		}
-		$arrMeal[$row1['MealID']][2] = $arrRecs;
+		$arrMeal[$row1['MealID']][3] = $arrRecs;
 	}
 	return $arrMeal;
 	mysql_close();
@@ -81,14 +84,14 @@ $arrMeal = getMealInformation($_POST['MealID']);
 echo "<html><body>";
 echo "<div align=\"center\">";
 foreach ($arrMeal as $MID => $Minfo) {
-	$title = $Minfo[0];
 	echo "<h2 align=\"center\">$Minfo[0]</h2>";
+	echo "<h4 align=\"center\">Time: $Minfo[2]</h4>";
 	echo "<div class=\"description1\" align=\"center\">$Minfo[1]</div>";
-	foreach ($Minfo[2] as $RID => $Rinfo) {
+	foreach ($Minfo[3] as $RID => $Rinfo) {
 		echo "<h3 align=\"center\">$Rinfo[0]</h3>";
-		#var_dump($Rinfo);
+		echo "<h4 align=\"center\">Servings: $Rinfo[3] - Time: $Rinfo[2]</h3>";
 		echo "<div class=\"instructions\"><p class=\"instructions\">$Rinfo[1]</p></div><div class=\"ingredient\"><ul>";
-		foreach ($Rinfo[2] as $IID => $Iinfo) {
+		foreach ($Rinfo[4] as $IID => $Iinfo) {
 			echo "<li>$Iinfo[0], $Iinfo[1]</li>";
 		}
 		echo "</ul></div>";
