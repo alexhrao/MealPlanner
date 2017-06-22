@@ -3,7 +3,7 @@
 <head>
 	
 	<style type="text/css">
-		.description1 {
+		.description {
 			color: #C0C0C0 !important;
 			font-style: italic !important;
 			padding-left: 15px !important;
@@ -86,7 +86,7 @@ echo "<div align=\"center\">";
 foreach ($arrMeal as $MID => $Minfo) {
 	echo "<h2 align=\"center\">$Minfo[0]</h2>";
 	echo "<h4 align=\"center\">Time: $Minfo[2]</h4>";
-	echo "<div class=\"description1\" align=\"center\">$Minfo[1]</div>";
+	echo "<div class=\"description\" align=\"center\">$Minfo[1]</div>";
 	foreach ($Minfo[3] as $RID => $Rinfo) {
 		echo "<h3 align=\"center\">$Rinfo[0]</h3>";
 		echo "<h4 align=\"center\">Servings: $Rinfo[3] - Time: $Rinfo[2]</h3>";
