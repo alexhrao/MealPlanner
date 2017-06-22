@@ -1,6 +1,6 @@
-USE Meal_Planner_DB;
+USE meal_planner_db;
 
-CREATE TABLE RecipeIngredients(
+CREATE TABLE recipeingredients(
 	RecipeIngredientID int auto_increment NOT NULL,
 	RecipeID int NOT NULL,
 	IngredientID int NOT NULL,
@@ -9,10 +9,7 @@ CREATE TABLE RecipeIngredients(
 (
 	RecipeIngredientID ASC
 ));
-
-ALTER TABLE RecipeIngredients ADD CONSTRAINT FK_RecipeIngredients_Ingredients FOREIGN KEY(IngredientID)
-REFERENCES Ingredients (IngredientID);
-
-ALTER TABLE RecipeIngredients ADD CONSTRAINT FK_RecipeIngredients_Recipes FOREIGN KEY(RecipeID)
-REFERENCES Recipes (RecipeID);
-
+ALTER TABLE recipeingredients ADD CONSTRAINT FK_RecipeIngredients_Ingredients FOREIGN KEY(IngredientID)
+	REFERENCES ingredients (IngredientID);
+ALTER TABLE recipeingredients ADD CONSTRAINT FK_RecipeIngredients_Recipes FOREIGN KEY(RecipeID)
+	REFERENCES recipes (RecipeID);

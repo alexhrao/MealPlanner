@@ -1,6 +1,6 @@
-USE Meal_Planner_DB;
+USE meal_planner_db;
 
-CREATE TABLE MealDates(
+CREATE TABLE mealdates(
 	MealDateID int auto_increment NOT NULL,
 	MealID int NOT NULL,
 	MealDate date NOT NULL,
@@ -9,5 +9,5 @@ CREATE TABLE MealDates(
 (
 	MealDateID ASC
 ));
-ALTER TABLE MealDates ADD CONSTRAINT FK_MealDates_Meals FOREIGN KEY(MealID)
-REFERENCES Meals (MealID);
+ALTER TABLE mealdates ADD CONSTRAINT FK_MealDates_Meals FOREIGN KEY(MealID)
+	REFERENCES meals (MealID);

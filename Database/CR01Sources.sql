@@ -1,7 +1,6 @@
-USE Meal_Planner_DB;
+USE meal_planner_db;
 
-
-CREATE TABLE Sources(
+CREATE TABLE sources(
 	SourceID int auto_increment NOT NULL,
 	FullName nvarchar(50) NOT NULL,
 	PhoneNumber nvarchar(50) NULL,
@@ -10,3 +9,4 @@ CREATE TABLE Sources(
 (
 	SourceID ASC
 ));
+CREATE UNIQUE INDEX idxFullName	ON sources (FullName);
