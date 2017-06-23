@@ -27,18 +27,13 @@
 
 <?php
 function getMealInformation() {
-	$dbServer = config('dbServer');
-	$dbUsername = config('dbUsername');
-	$dbPassword = config('dbPassword');
-	$dbDatabase = config('dbDatabase');
-	mysql_connect($dbServer, $dbUsername, $dbPassword);
-	mysql_select_db($dbDatabase) or die("Unable to select DB!");
-	$queryDates = "SELECT meals.Name, meals.MealID, mealdates.MealDate, mealdates.MealTime, meals.Description FROM meals INNER JOIN mealdates ON mealdates.MealID = meals.MealID ORDER BY mealdates.MealDate";
-	$resultDates = mysql_query($queryDates);
+	$dbConnection = $GLOBALS['dbConnection'];
+	$dates = $dbConnection->prepare("SELECT meals.Name, meals.MealID, mealdates.MealDate, mealdates.MealTime, meals.Description FROM meals INNER JOIN mealdates ON mealdates.MealID = meals.MealID ORDER BY mealdates.MealDate");
+	$dates->execute();
 	$arrDates = array();
 	$prevDate = "";
 	$arrInfo = array();
-	while ($row = mysql_fetch_assoc($resultDates)) {
+	while ($row = $dates->fetch(PDO::FETCH_ASSOC)) {
 		if ($prevDate != $row['MealDate'] and $prevDate != "") {
 			$arrDates[$prevDate] = $arrInfo;
 			$arrInfo = array();
@@ -52,7 +47,6 @@ function getMealInformation() {
 			$arrInfo = array();
 		}
 	return $arrDates;
-	mysql_close();
 }
 
 function leapYear($year) {

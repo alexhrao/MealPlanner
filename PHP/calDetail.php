@@ -75,7 +75,6 @@ function getMealInformation($MealID)
 		$arrMeal[$row1['MealID']][3] = $arrRecs;
 	}
 	return $arrMeal;
-	mysql_close();
 }
 
 $dir = dirname(__FILE__);
