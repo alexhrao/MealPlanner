@@ -5,29 +5,29 @@
 </html>
 
 <?php
-	function get_ShoppingListInfo($startDate, $endDate, $prefStore, $arrNoStore) {
-		$dbServer = config('dbServer');
-		$dbUsername = config('dbUsername');
-		$dbPassword = config('dbPassword');
-		$dbDatabase = config('dbDatabase');
-		mysql_connect($dbServer, $dbUsername, $dbPassword);
-		mysql_select_db($dbDatabase) or die("Unable to select DB!");
+	function getShoppingListInfo($startDate, $endDate, $prefStore, $arrNoStore) {
+		$dbConnection = $GLOBALS['dbConnection'];
 		array_unshift($arrNoStore, 0);
-		$queryIngred = "SELECT ingredients.IngredientID, recipeingredients.amount, concat(format(recipeingredients.Amount, 2), ' ', ingredients.PricingUnit) as Ingredient, ingredients.PricingUnit from meals inner join mealdates on mealdates.MealID = meals.MealID inner join mealrecipes on mealrecipes.MealID = meals.MealID inner join recipes on recipes.RecipeID = mealrecipes.RecipeID inner join recipeingredients on recipeingredients.RecipeID = recipes.RecipeID inner join ingredients on ingredients.IngredientID = recipeIngredients.IngredientID where mealdates.MealDate >= \"$startDate\" and mealdates.MealDate <= \"$endDate\";"; # Get ALL ingredients needed!
-		$ingredID = mysql_query($queryIngred);
-		$queryPref = "SELECT ingredients.IngredientID, ingredients.Name, concat(format(recipeingredients.Amount, 2), ' ', ingredients.PricingUnit) as Ingredient, recipeingredients.amount * ingredientstores.Cost as Cost from meals inner join mealdates on mealdates.MealID = meals.MealID inner join mealrecipes on mealrecipes.MealID = meals.MealID inner join recipes on recipes.RecipeID = mealrecipes.RecipeID inner join recipeingredients on recipeingredients.RecipeID = recipes.RecipeID inner join ingredients on ingredients.IngredientID = recipeIngredients.IngredientID inner join ingredientstores on ingredientstores.IngredientID = ingredients.IngredientID where mealdates.MealDate >= \"$startDate\" and mealdates.MealDate <= \"$endDate\";";
+		$ingreds = $dbConnection->prepare("SELECT ingredients.IngredientID, recipeingredients.amount, concat(format(recipeingredients.Amount, 2), ' ', ingredients.PricingUnit) AS Ingredient, ingredients.PricingUnit FROM meals INNER JOIN mealdates ON mealdates.MealID = meals.MealID INNER JOIN mealrecipes ON mealrecipes.MealID = meals.MealID INNER JOIN recipes ON recipes.RecipeID = mealrecipes.RecipeID INNER JOIN recipeingredients ON recipeingredients.RecipeID = recipes.RecipeID INNER JOIN ingredients ON ingredients.IngredientID = recipeIngredients.IngredientID WHERE mealdates.MealDate >= :startDate AND mealdates.MealDate <= :endDate;"); # Get ALL ingredients needed!
+		$ingreds->bindValue(':startDate', $startDate, PDO::PARAM_STR);
+		$ingreds->bindValue(':endDate', $endDate, PDO::PARAM_STR);
+		$ingreds->execute();
 
-		$result = mysql_query($queryPref);
+		$prefs = $dbConnection->prepare("SELECT ingredients.IngredientID, ingredients.Name, concat(format(recipeingredients.Amount, 2), ' ', ingredients.PricingUnit) AS Ingredient, recipeingredients.amount * ingredientstores.Cost AS Cost FROM meals INNER JOIN mealdates ON mealdates.MealID = meals.MealID INNER JOIN mealrecipes ON mealrecipes.MealID = meals.MealID INNER JOIN recipes ON recipes.RecipeID = mealrecipes.RecipeID INNER JOIN recipeingredients ON recipeingredients.RecipeID = recipes.RecipeID INNER JOIN ingredients ON ingredients.IngredientID = recipeIngredients.IngredientID INNER JOIN ingredientstores ON ingredientstores.IngredientID = ingredients.IngredientID WHERE mealdates.MealDate >= :startDate AND mealdates.MealDate <= :endDate;");
+		$prefs->bindValue(':startDate', $startDate, PDO::PARAM_STR);
+		$prefs->bindValue(':endDate', $endDate, PDO::PARAM_STR);
+		$prefs->execute();
+
 		$arrIngred = array();
 		$arrAmount = array();
 		$arrPref = array(0);
 		$arrPrefCost = array();
-		while ($row = mysql_fetch_assoc($result)) {
+		while ($row = $prefs->fetch(PDO::FETCH_ASSOC)) {
 			$arrPref[] = $row['IngredientID'];
 			$arrPrefCost[(int) $row['IngredientID']] = array((float) $row['Cost'], $row['Ingredient']);
 		}
 		
-		while ($row = mysql_fetch_assoc($ingredID)) {
+		while ($row = $ingreds->fetch(PDO::FETCH_ASSOC)) {
 			$intKey = array_search($row['IngredientID'], $arrPref);
 			if (!$intKey) {
 				$arrIngred[(int) $row['IngredientID']] = array((float) $row['amount'], $row['Ingredient']);
@@ -37,10 +37,11 @@
 		$arrAltCost = array();
 		$arrAltStore = array();
 		foreach ($arrIngred as $k => $v) {
-			$queryStore = "select ingredientstores.StoreID, ingredientstores.Cost from ingredientstores where ingredientstores.IngredientID = $k";
-			$resultTemp = mysql_query($queryStore);
+			$stores = $dbConnection->prepare("SELECT ingredientstores.StoreID, ingredientstores.Cost FROM ingredientstores WHERE ingredientstores.IngredientID = :id");
+			$stores->bindValue(':id', $k, PDO::PARAM_INT);
+			$stores->execute();
 			$arrCosts = array();
-			while ($row = mysql_fetch_assoc($resultTemp)) {
+			while ($row = $stores->fetch(PDO::FETCH_ASSOC)) {
 				if (!array_search($row['StoreID'], $arrNoStore)) {
 					$arrCosts[(int) $row['StoreID']] = (float) $row['Cost'] * $v[0];
 				}
@@ -76,44 +77,42 @@
 
 		foreach ($arrList as $k => $v) {
 			foreach ($v as $ingredTemp => $arrCostTemp) {
-				$queryIName = "select ingredients.Name from ingredients where ingredients.IngredientID = $ingredTemp";
-				$resultTemp = mysql_query($queryIName);
-				$row = mysql_fetch_assoc($resultTemp);
+
+				$ingredNames = $dbConnection->prepare("SELECT ingredients.Name FROM ingredients WHERE ingredients.IngredientID = :id");
+				$ingredNames->bindValue(':id', $ingredTemp, PDO::PARAM_INT);
+				$ingredNames->execute();
+				$row = $ingredNames->fetch(PDO::FETCH_ASSOC);
 				$v[$row['Name']] = $arrCostTemp;
 				unset($v[$ingredTemp]);
 			}
-			$querySName = "select stores.Name from stores where stores.StoreID = $k";
+			$storeNames = $dbConnection->prepare("SELECT stores.Name FROM stores WHERE stores.StoreID = :storeID");
 			if ($k==0) {
 				$arrList['<em>Unknown</em>'] = $v;
 				unset($arrList[$k]);
 			}
 			else {
-				$resultTemp = mysql_query($querySName);
-				$row = mysql_fetch_assoc($resultTemp);
+				$storeNames->bindValue(':storeID', $k, PDO::PARAM_INT);
+				$storeNames->execute();
+				$row = $storeNames->fetch(PDO::FETCH_ASSOC);
 				$arrList[$row['Name']] = $v;
 				unset($arrList[$k]);
 			}
 		}
 		return $arrList;
-		mysql_close();
 	}
-	function get_StoreInfo()
+
+	function getStoreInfo()
 	{
-		$dbServer = config('dbServer');
-		$dbUsername = config('dbUsername');
-		$dbPassword = config('dbPassword');
-		$dbDatabase = config('dbDatabase');
-		mysql_connect($dbServer, $dbUsername, $dbPassword);
-		mysql_select_db($dbDatabase) or die("Unable to select DB!");
-		$query = "Select stores.StoreID, stores.Name from stores;";
-		$result = mysql_query($query);
+		$dbConnection = $GLOBALS['dbConnection'];
+		$stores = $dbConnection->prepare("SELECT stores.StoreID, stores.Name FROM stores;");
+		$stores->execute();
 		$arrStores = array();
-		while ($row = mysql_fetch_assoc($result)) {
+		while ($row = $stores->fetch(PDO::FETCH_ASSOC)) {
 			$arrStores[(int) $row['StoreID']] = $row['Name'];
 		}
 		return $arrStores;
-		mysql_close();
 	}
+
 	$dir = dirname(__FILE__);
 	include("$dir/defaultLang.php");
 	include("$dir/language.php");
@@ -125,19 +124,16 @@
 		$endDate = $_POST['endDate'];
 		$prefStore = $_POST['prefStore'];
 		$arrExempt = array();
-		$arrStores = get_StoreInfo();
+		$arrStores = getStoreInfo();
 		foreach ($arrStores as $ID => $name) {
 			if (!is_null($_POST[$ID])) {
 				$arrExempt[] = (int) $ID;
 			}
 		}
-		# need yyyymmdd
-		#$startDate = substr($startDate, 0, 4) . substr($startDate, 5, 2) . substr($startDate, 8, 2);
-		#$endDate = substr($endDate, 0, 4) . substr($endDate, 5, 2) . substr($endDate, 8, 2);
 		$prefStore = (int) $prefStore;
 	}
 	else {
-		$arrStores = get_StoreInfo();
+		$arrStores = getStoreInfo();
 		echo "<form action=\"shoppingList.php\" name=\"testform\" method=\"post\">
 				<div class=\"form\">
 					<div id=\"startDate\">
@@ -166,7 +162,7 @@
 			</form>";
 			exit;
 		}
-	$arrList = get_ShoppingListInfo($startDate, $endDate, $prefStore, $arrExempt);
+	$arrList = getShoppingListInfo($startDate, $endDate, $prefStore, $arrExempt);
 	$intTotal = 0;
 	echo "<h1 id=\"shoppingList\"><strong>Shopping List</strong></h1><br>";
 	foreach ($arrList as $store => $info) {
