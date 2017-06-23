@@ -37,6 +37,16 @@ include("$currDir/datalist.php");
 include("$currDir/incCommon.php");
 include("$currDir/admin/incFunctions.php");
 
+$dbServer = config('dbServer');
+$dbUsername = config('dbUsername');
+$dbPassword = config('dbPassword');
+$dbDatabase = config('dbDatabase');
+
+try {
+	$GLOBALS['dbConnection'] = new PDO("mysql:host=$dbServer;dbname=$dbDatabase;charset=utf8mb4", $dbUsername, $dbPassword, array(PDO::ATTR_EMULATE_PREPARES => false, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
+} catch (PDOException $e) {
+	echo "SHIT";
+}
 	ob_start();
 
 

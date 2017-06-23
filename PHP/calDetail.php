@@ -43,29 +43,32 @@
 
 function getMealInformation($MealID)
 {
-	$dbServer = config('dbServer');
-	$dbUsername = config('dbUsername');
-	$dbPassword = config('dbPassword');
-	$dbDatabase = config('dbDatabase');
-	mysql_connect($dbServer, $dbUsername, $dbPassword);
-	mysql_select_db($dbDatabase) or die("Unable to select DB!");
-	$queryMeal = "SELECT meals.MealID, meals.Name, meals.Description FROM meals WHERE meals.MealID = $MealID;";
-	$queryMealTime = "SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(recipes.PrepTime))) AS TotalTime FROM meals INNER JOIN mealrecipes ON mealrecipes.MealID = meals.MealID INNER JOIN recipes ON recipes.RecipeID = mealrecipes.RecipeID WHERE mealrecipes.MealID = $MealID;";
-	$queryRecipes = "SELECT recipes.RecipeID, recipes.Name, recipes.Instructions, recipes.PrepTime, recipes.Servings FROM meals INNER JOIN mealrecipes ON mealrecipes.MealID = meals.MealID INNER JOIN recipes ON recipes.RecipeID = mealrecipes.RecipeID WHERE mealrecipes.MealID = $MealID;";
-	$resultTime = mysql_query($queryMealTime);	
-	$resultMeal = mysql_query($queryMeal);
-	$resultRecipe = mysql_query($queryRecipes);
-	while ($row1 = mysql_fetch_assoc($resultMeal)) {
-		$time = mysql_fetch_assoc($resultTime);
+	$dbConnection = $GLOBALS['dbConnection'];
+	$meals = $dbConnection->prepare("SELECT meals.MealID, meals.Name, meals.Description FROM meals WHERE meals.MealID = :mealID;");
+	$meals->bindValue(':mealID', $MealID, PDO::PARAM_INT);
+	$meals->execute();
+
+	$mealTimes = $dbConnection->prepare("SELECT SEC_TO_TIME(SUM(TIME_TO_SEC(recipes.PrepTime))) AS TotalTime FROM meals INNER JOIN mealrecipes ON mealrecipes.MealID = meals.MealID INNER JOIN recipes ON recipes.RecipeID = mealrecipes.RecipeID WHERE mealrecipes.MealID = :mealID;");
+	$mealTimes->bindValue(':mealID', $MealID, PDO::PARAM_INT);
+	$mealTimes->execute();
+
+	$recipes = $dbConnection->prepare("SELECT recipes.RecipeID, recipes.Name, recipes.Instructions, recipes.PrepTime, recipes.Servings FROM meals INNER JOIN mealrecipes ON mealrecipes.MealID = meals.MealID INNER JOIN recipes ON recipes.RecipeID = mealrecipes.RecipeID WHERE mealrecipes.MealID = :mealID;");
+	$recipes->bindValue(':mealID', $MealID, PDO::PARAM_INT);
+	$recipes->execute();
+
+	while ($row1 = $meals->fetch(PDO::FETCH_ASSOC)) {
+		$time = $mealTimes->fetch(PDO::FETCH_ASSOC);
 		$arrMeal[$row1['MealID']] = array($row1['Name'], $row1['Description'], $time['TotalTime'], array());
 		$arrRecs = array();
-		while ($row2 = mysql_fetch_assoc($resultRecipe)) {
+		while ($row2 = $recipes->fetch(PDO::FETCH_ASSOC)) {
 			$arrRecs[$row2['RecipeID']] = array($row2['Name'], $row2['Instructions'], $row2['PrepTime'], $row2['Servings'], array());
 		}
 		foreach ($arrRecs as $RecipeID => $info) {
-			$queryIngred = "SELECT ingredients.Name AS Name, concat(recipeingredients.amount, \" \", ingredients.PricingUnit) AS Amount FROM meals INNER JOIN mealrecipes ON mealrecipes.MealID = meals.MealID INNER JOIN recipes ON recipes.RecipeID = mealrecipes.RecipeID INNER JOIN recipeIngredients ON recipeingredients.RecipeID = recipes.RecipeID INNER JOIN ingredients ON ingredients.IngredientID = recipeingredients.IngredientID WHERE mealrecipes.MealID = $MealID AND recipeingredients.RecipeID = $RecipeID;";
-			$resultIngred = mysql_query($queryIngred);
-			while ($row3 = mysql_fetch_assoc($resultIngred)) {
+			$ingreds = $dbConnection->prepare("SELECT ingredients.Name AS Name, CONCAT(recipeingredients.amount, \" \", ingredients.PricingUnit) AS Amount FROM meals INNER JOIN mealrecipes ON mealrecipes.MealID = meals.MealID INNER JOIN recipes ON recipes.RecipeID = mealrecipes.RecipeID INNER JOIN recipeIngredients ON recipeingredients.RecipeID = recipes.RecipeID INNER JOIN ingredients ON ingredients.IngredientID = recipeingredients.IngredientID WHERE mealrecipes.MealID = :mealID AND recipeingredients.RecipeID = :recipeID;");
+			$ingreds->bindValue(':mealID', $MealID, PDO::PARAM_INT);
+			$ingreds->bindValue(':recipeID', $RecipeID, PDO::PARAM_INT);
+			$ingreds->execute();
+			while ($row3 = $ingreds->fetch(PDO::FETCH_ASSOC)) {
 				$arrRecs[$RecipeID][4][] = array($row3['Name'], $row3['Amount']);
 			}
 		}
@@ -87,6 +90,7 @@ foreach ($arrMeal as $MID => $Minfo) {
 	echo "<h2 align=\"center\">$Minfo[0]</h2>";
 	echo "<h4 align=\"center\">Time: $Minfo[2]</h4>";
 	echo "<div class=\"description\" align=\"center\">$Minfo[1]</div>";
+	echo "<p>" . $GLOBALS['z'] . "</p>";
 	foreach ($Minfo[3] as $RID => $Rinfo) {
 		echo "<h3 align=\"center\">$Rinfo[0]</h3>";
 		echo "<h4 align=\"center\">Servings: $Rinfo[3] - Time: $Rinfo[2]</h3>";
