@@ -28,7 +28,7 @@
 		"`recipes`.`Instructions`" => "Instructions",
 		"`recipes`.`Description`" => "Description",
 		"IF(    CHAR_LENGTH(`sources1`.`FullName`), CONCAT_WS('',   `sources1`.`FullName`), '') /* Source */" => "SourceID",
-		"TIME_FORMAT(`recipes`.`PrepTime`, '%r')" => "PrepTime",
+		"if(CHAR_LENGTH(`recipes`.`PrepTime`)>8, concat(left(`recipes`.`PrepTime`,8),' ...'), `recipes`.`PrepTime`)" => "PrepTime",
 		"`recipes`.`Servings`" => "Servings"
 	);
 	// mapping incoming sort by requests to actual query fields
@@ -39,7 +39,7 @@
 		4 => 4,
 		5 => 5,
 		6 => '`sources1`.`FullName`',
-		7 => '`recipes`.`PrepTime`',
+		7 => 7,
 		8 => '`recipes`.`Servings`'
 	);
 
@@ -51,7 +51,7 @@
 		"`recipes`.`Instructions`" => "Instructions",
 		"`recipes`.`Description`" => "Description",
 		"IF(    CHAR_LENGTH(`sources1`.`FullName`), CONCAT_WS('',   `sources1`.`FullName`), '') /* Source */" => "SourceID",
-		"TIME_FORMAT(`recipes`.`PrepTime`, '%r')" => "PrepTime",
+		"`recipes`.`PrepTime`" => "PrepTime",
 		"`recipes`.`Servings`" => "Servings"
 	);
 	// Fields that can be filtered
@@ -74,7 +74,7 @@
 		"`recipes`.`Instructions`" => "Instructions",
 		"`recipes`.`Description`" => "Description",
 		"IF(    CHAR_LENGTH(`sources1`.`FullName`), CONCAT_WS('',   `sources1`.`FullName`), '') /* Source */" => "SourceID",
-		"TIME_FORMAT(`recipes`.`PrepTime`, '%r')" => "PrepTime",
+		"`recipes`.`PrepTime`" => "Time to Prepare",
 		"`recipes`.`Servings`" => "Servings"
 	);
 

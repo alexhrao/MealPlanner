@@ -25,7 +25,7 @@
 			'Instructions' => array('appgini' => 'TEXT '),
 			'Description' => array('appgini' => 'TEXT '),
 			'SourceID' => array('appgini' => 'INT(11) '),
-			'PrepTime' => array('appgini' => 'TIME default \'00:00:00\' '),
+			'PrepTime' => array('appgini' => 'VARCHAR(8) default \'00:00:00\' '),
 			'Servings' => array('appgini' => 'TINYINT(2) default \'0\' ')
 		),
 		'ingredients' => array(   

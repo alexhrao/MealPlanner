@@ -26,7 +26,6 @@ function recipes_insert(){
 		if($data['SourceID'] == empty_lookup_value){ $data['SourceID'] = ''; }
 	$data['PrepTime'] = makeSafe($_REQUEST['PrepTime']);
 		if($data['PrepTime'] == empty_lookup_value){ $data['PrepTime'] = ''; }
-	$data['PrepTime'] = time24($data['PrepTime']);
 	$data['Servings'] = makeSafe($_REQUEST['Servings']);
 		if($data['Servings'] == empty_lookup_value){ $data['Servings'] = ''; }
 	if($data['Name']== ''){
@@ -172,7 +171,6 @@ function recipes_update($selected_id){
 		if($data['SourceID'] == empty_lookup_value){ $data['SourceID'] = ''; }
 	$data['PrepTime'] = makeSafe($_REQUEST['PrepTime']);
 		if($data['PrepTime'] == empty_lookup_value){ $data['PrepTime'] = ''; }
-	$data['PrepTime'] = time24($data['PrepTime']);
 	$data['Servings'] = makeSafe($_REQUEST['Servings']);
 		if($data['Servings'] == empty_lookup_value){ $data['Servings'] = ''; }
 	$data['selectedID']=makeSafe($selected_id);
@@ -439,7 +437,6 @@ function recipes_form($selected_id = '', $AllowUpdate = 1, $AllowInsert = 1, $Al
 		$noUploads = true;
 	}elseif($AllowInsert){
 		$jsEditable .= "\tjQuery('form').eq(0).data('already_changed', true);"; // temporarily disable form change handler
-		$jsEditable .= "\tjQuery('#PrepTime').addClass('always_shown').timepicker({ defaultTime: false, showSeconds: true, showMeridian: true, showInputs: false, disableFocus: true, minuteStep: 5 });";
 			$jsEditable .= "\tjQuery('form').eq(0).data('already_changed', false);"; // re-enable form change handler
 	}
 
@@ -500,8 +497,8 @@ function recipes_form($selected_id = '', $AllowUpdate = 1, $AllowInsert = 1, $Al
 		$templateCode=str_replace('<%%URLVALUE(Description)%%>', urlencode($urow['Description']), $templateCode);
 		$templateCode=str_replace('<%%VALUE(SourceID)%%>', html_attr($row['SourceID']), $templateCode);
 		$templateCode=str_replace('<%%URLVALUE(SourceID)%%>', urlencode($urow['SourceID']), $templateCode);
-		$templateCode=str_replace('<%%VALUE(PrepTime)%%>', time12(html_attr($row['PrepTime'])), $templateCode);
-		$templateCode=str_replace('<%%URLVALUE(PrepTime)%%>', urlencode(time12($urow['PrepTime'])), $templateCode);
+		$templateCode=str_replace('<%%VALUE(PrepTime)%%>', html_attr($row['PrepTime']), $templateCode);
+		$templateCode=str_replace('<%%URLVALUE(PrepTime)%%>', urlencode($urow['PrepTime']), $templateCode);
 		$templateCode=str_replace('<%%VALUE(Servings)%%>', html_attr($row['Servings']), $templateCode);
 		$templateCode=str_replace('<%%URLVALUE(Servings)%%>', urlencode($urow['Servings']), $templateCode);
 	}else{
