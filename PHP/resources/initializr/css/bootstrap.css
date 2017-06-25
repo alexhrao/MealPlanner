@@ -193,11 +193,11 @@ td, th {
   text-align: center;
 }
 
-.form {
+.formShoppingList {
   display: flex;
   width: 650px;
 }
-#submit {
+#submitShoppingList {
   margin-left: 665px;
   margin-top: -40px;
 }
@@ -241,7 +241,7 @@ td, th {
      cursor: pointer;
 }
 
-.description1 {
+.description {
   color: #C0C0C0;
   font-style: italic;
   padding-left: 15px;

@@ -40,7 +40,7 @@
 
 					<div class="row">
 						<div class="col-sm-offset-3 col-sm-6">
-							<button name="signIn" type="submit" id="submit" value="signIn" class="btn btn-primary btn-lg btn-block"><?php echo $Translation['sign in']; ?></button>
+							<button name="signIn" type="submit" value="signIn" class="btn btn-primary btn-lg btn-block"><?php echo $Translation['sign in']; ?></button>
 						</div>
 					</div>
 				</form>

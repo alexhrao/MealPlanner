@@ -134,8 +134,8 @@
 	}
 	else {
 		$arrStores = getStoreInfo();
-		echo "<form action=\"shoppingList.php\" name=\"testform\" method=\"post\">
-				<div class=\"form\">
+		echo "<form action=\"shoppingList.php\" name=\"form\" method=\"post\">
+				<div class=\"formShoppingList\">
 					<div id=\"startDate\">
 						Start Date: <br><input type=\"date\" name=\"startDate\">
 					</div>
@@ -156,7 +156,7 @@
 		}
 		echo		"</div>
 				</div>
-			<div id=\"submit\">
+			<div id=\"submitShoppingList\">
 				<input type=\"submit\" name=\"submit\" value=\"Generate Shopping List\">
 			</div>
 			</form>";
