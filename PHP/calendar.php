@@ -20,7 +20,7 @@
 		    visibility: visible !important;
 		}
 		</style>
-		<title>Calendar View</title>
+		<title>Hello! View</title>
 	</header>
 </html>
 
