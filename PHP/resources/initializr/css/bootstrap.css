@@ -236,6 +236,7 @@ td, th {
      border:none; 
      padding:0;
      font: inherit;
+     font-size: 12px;
      /*border is optional*/
      border-bottom:1px solid #444; 
      cursor: pointer;

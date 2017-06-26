@@ -189,7 +189,7 @@ for ($day = 1; $day <= $arrMonths[$month][1]; $day++) {
 			echo '<div id="tooltip">';
 			echo '<form name="calDetail" action="calDetail.php" method="post" target="_blank">';
 			echo "<input type=\"hidden\" name=\"MealID\" value=\"$meal[3]\">";
-			echo "<input id=\"calDetail\" type=\"submit\" name=\"calDetail\" value=\"";
+			echo "<input id=\"calDetail\" type=\"submit\" name=\"calDetail\" style=\"font-size: 12px !important\" value=\"";
 			echo $arrAbr[$meal[1]] . ": $meal[0]\"></form>";
 			echo '<div id="tooltiptext">' . $meal[2] . '</div></div>';
 		}
