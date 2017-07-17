@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="google-site-verification" content="U0YbbGbaPntfo6sI1FvCUkRI1URGu1yRL9Avi9HParg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sudoku Online</title>
+    <link rel="shortcut icon" type="application/ico" href="resources/images/branding/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.4/summernote.css" />
+    <link rel="stylesheet" type="text/css" href="resources/css/header.css" />
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.4/summernote.js"></script>
+    <script type="text/javascript" src="https://cdn.emailjs.com/dist/email.min.js"></script>
+    <script type="text/javascript" src='https://www.google.com/recaptcha/api.js'></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery.typeit/4.4.0/typeit.min.js"></script>
+    <script type="text/javascript" src="resources/scripts/onReady.js"></script>
+</head>
+
+<body>
+    <nav class="navbar navbar-fixed-top">
+        <div class="container-fluid navbar-inverse">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#menuBar">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                <a id="logo" href="https://alexhrao.github.io" class="navbar-left">
+                    &nbsp;
+                    <img id="logoImage" class="img-circle" src="resources/images/branding/logo.png" height="50px"/>
+                    <div id="logoName" class="navbar-brand">
+                        Alexander Rao
+                    </div>
+                </a>
+            </div>
+            <div id="menuBar" class="collapse navbar-collapse">
+                <ul class="nav navbar-nav visible-xs">
+                    <li><a href="https://alexhrao.github.io/Sudoku/">Sudoku Online</a></li>
+                    <li><a href="https://alexhrao.github.io/MealPlanner/">Meal Planner</a></li>
+                    <li><a href="https://alexhrao.github.io/SoluCheck/">SoluCheck</a></li>
+                    <li><a href="https://alexhrao.github.io/Chess/">Chess</a></li>
+                    <li><a href="https://alexhrao.github.io/VariableLoader/">Variable Loader</a></li>
+                </ul>
+                <ul class="nav navbar-nav hidden-xs">
+                    <li><a href="https://alexhrao.github.io/Sudoku/">Sudoku Online</a></li>
+                    <li><a href="https://alexhrao.github.io/MealPlanner/">Meal Planner</a></li>
+                    <li><a href="https://alexhrao.github.io/SoluCheck/">SoluCheck</a></li>
+                    <li><a href="https://alexhrao.github.io/Chess/">Chess</a></li>
+                    <li><a href="https://alexhrao.github.io/VariableLoader/">Variable Loader</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div id="projects" class="container-fluid">
+        <div class="row projects content">
+            <div class="col-sm-12">
+                <div class="tab-content">
+                    <div id="soluCheck" class="tab-pane fade in active">
+                        <div class="col-xs-12">
+                            <h5>Looking for the documentation? Download it <a href="#">here</a>.</h5>
+                            <a href="https://alexhrao.github.io/SoluCheck/">
+                                <img id="soluCheckLogo" src="resources/images/projects/SoluCheckIcon.png" data-toggle="tooltip" title="The icon for SoluCheck. Click to view the repository" data-placement="auto top" class="img-responsive pull-left" />
+                            </a>
+                            <p>
+                                SoluCheck is my very first real "Program" - it has an installer, a GUI, and is extraordinarily user friendly. It's created entirely in MATLAB&reg;, and uses MATLAB&reg;'s GUI elements.
+                            </p>
+                            <h2 class="sectionHeader">
+                                History
+                            </h2>
+                            <div id="history" class="history">
+                                <p>
+                                    SoluCheck was started from a desire to be lazy. For CS 1371 (A class which I now TA for), we have to create code that will, theoretically, solve a given problem for <em>any</em> starting conditions. These starting conditions
+                                    are given as inputs to MATLAB&reg; functions, or as external files (i.e., text files, image files, etc.).
+                                </p>
+                                <div class="beginning">
+                                    <h3>The Beginning</h3>
+                                    <p>
+                                        Originally a command-line utility, it consisted of one function - Solver - that took in a function name (as a string), a "number of iterations" (how many times solver would test the function), and a variable number of arguments - arguments that specify
+                                        the starting argument and the "step size" for that argument. Basically, solver would increment the argument by its step size each successive iteration. This was clunky, to say the least, and for a large number of
+                                        arguments, would quickly go out of hand with number of arguments. Indeed, the first solver didn't even work!
+                                    </p>
+                                </div>
+                                <div class="second">
+                                    <h3>A Second Attempt</h3>
+                                    <p>
+                                        Still a command-line utility, this time the solver at least worked... but only for numbers. Characters caused the solver to straight up die, and error checking? Look who's asking for the moon.
+                                    </p>
+                                </div>
+                                <div class="third">
+                                    <h3>Yet Another Attempt</h3>
+                                    <p>
+                                        Now this time, there was no real "hot new thing" - it was just bug fixes. It was becoming clear at this point that a GUI would be almost a requirement - the argument entry was becoming nightmarish!
+                                    </p>
+                                </div>
+                                <div class="fourth">
+                                    <img src="resources/images/projects/soluCheckGUI.png" class="img-responsive pull-left" />
+                                    <h3>A GUI Rises</h3>
+                                    <p>
+                                        This is it. The beginning of SoluCheck, SoluWare (The "parent company" responsible for SoluCheck - I had my head in the clouds). The world's first (and still only!) GUI that will programmatically check homework for a variety of test cases. Mind you, there
+                                        are still some problems. The business logic and presentation logic are still combined - not good for any product, and there are still a variety of arguments not testable. But it's a start.
+                                    </p>
+                                </div>
+                            </div>
+                            <h2 class="sectionHeader">
+                                Modern Times
+                            </h2>
+                            <div id="modern" class="modern">
+                                <p>
+                                    Now, SoluCheck is at the forefront of MATLAB&reg; function testing. Almost a testing framework, but made for programmers just getting used to MATLAB&reg;, but useful for experienced Programmers as well.
+                                </p>
+                                <div class="features">
+                                    <h3>Features</h3>
+                                    <p>
+                                        SoluCheck has a multitude of features that help the average MATLAB&reg; programmer test and debug code. Features include:
+                                    </p>
+                                    <ul>
+                                        <li>Ability to arbitrarily test any number of arguments, any number of times</li>
+                                        <li>User has easy-to-use options that allow image testing, plot testing, and file testing, in addition to testing normal outputs</li>
+                                        <li>As opposed to normal testing procedures, SoluCheck will, by default, treat identical errors as <em>success</em>, since if both the function and solution error, that is success!</li>
+                                        <li>Advanced options allow user to precisely tune SoluCheck to their precise needs</li>
+                                    </ul>
+                                    <p>
+                                        As noted above, SoluCheck has a variety of advanced options, detailed below:
+                                    </p>
+                                    <!-- Glyphicons for different options -->
+                                    <div class="advanced">
+                                        <div class="row content">
+                                            <div class="text-center col-sm-4">
+                                                <h3><span class="glyphicon glyphicon-envelope"></span></h3>
+                                                <h4>Notifications</h4>
+                                                <h5>
+                                                    Need to head out? Have SoluCheck email you the results of your test, viewable from anywhere .mat files are supported!
+                                                </h5>
+                                            </div>
+                                            <div class="text-center col-sm-4">
+                                                <h3><span class="glyphicon glyphicon-signal"></span></h3>
+                                                <h4>Performance</h4>
+                                                <h5>
+                                                    Does your code run slowly? Or quickly? See how it stacks up against the solution file with timing and code performance analysis. See exactly what's slowing you down, and graph timing information over the entire set of iterations.
+                                                </h5>
+                                            </div>
+                                            <div class="text-center col-sm-4">
+                                                <h3><span class="glyphicon glyphicon-check"></span></h3>
+                                                <h4>Auditing</h4>
+                                                <h5>
+                                                    Don't believe the solution code is right? Audit instead, and see how many times your function agrees with the solution, and, for where they differ, know how and why, with input and output information.
+                                                </h5>
+                                            </div>
+                                        </div>
+                                        <div class="text-center row content">
+                                            <div class="text-center col-sm-4">
+                                                <h3><span class="glyphicon glyphicon-file"></span></h3>
+                                                <h4>Files</h4>
+                                                <h5>
+                                                    Need to test contents of text files? Use the File Comparison Tool to automatically include files as outputs.
+                                                </h5>
+                                            </div>
+                                            <div class="text-center col-sm-4">
+                                                <h3><span class="glyphicon glyphicon-picture"></span></h3>
+                                                <h4>Images</h4>
+                                                <h5>
+                                                    Do you need to check images? Use the Image Comparison Tool, which has built-in tolerance that has been verified as identical to that of the autograder.
+                                                </h5>
+                                            </div>
+                                            <div class="text-center col-sm-4">
+                                                <h3><span class="fa fa-area-chart"></span></h3>
+                                                <h4>Plots</h4>
+                                                <h5>
+                                                    Need to check plot outputs? SoluCheck's Plot Compare Tool will inform you of the average "plot difference" (% difference between plots).
+                                                </h5>
+                                            </div>
+                                        </div>
+                                        <div class="row content">
+                                            <div class="text-center col-sm-4">
+                                                <h3><span class="glyphicon glyphicon-import"></span></h3>
+                                                <h4>Loading &amp; Custom arguments</h4>
+                                                <h5>
+                                                    Need to fine-tune your input arguments? Simply create custom input scripts that output the new input argument and run in a sandboxed state. Need to include variables, but don't want their value to be overwritten? Just load a custom .MAT file using the
+                                                    Variable Loader.
+                                                </h5>
+                                            </div>
+                                            <div class="text-center col-sm-4">
+                                                <h3><span class="glyphicon glyphicon-transfer"></span></h3>
+                                                <h4>Variable I/O</h4>
+                                                <h5>
+                                                    Does your function support
+                                                    <div class="code">varargin</div> and/or
+                                                    <div class="code">varargout</div> parameters? Test the function using SoluCheck's built-in variable I/O support.
+                                                </h5>
+                                            </div>
+                                            <div class="text-center col-sm-4">
+                                                <h3><span class="fa fa-database"></span></h3>
+                                                <h4>Automation</h4>
+                                                <h5>
+                                                    Have a database of tests you'd like to perform? Import them with the Automation module of SoluCheck.
+                                                </h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Social -->
+</body>
+
+</html>

@@ -1,0 +1,328 @@
+/* Media: */
+@media (min-width: 768px) and (max-width: 865px) {
+    .navbar-header {
+        float: none;
+    }
+    .navbar-toggle {
+        display: block;
+    }
+    .navbar-collapse {
+        border-top: 1px solid transparent;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+    }
+    .navbar-collapse.collapse {
+        display: none!important;
+    }
+    .navbar-nav {
+        float: none!important;
+        margin: 7.5px -15px;
+    }
+    .navbar-nav>li {
+        float: none;
+    }
+    .navbar-nav>li>a {
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+    .navbar-text {
+        float: none;
+        margin: 15px 0;
+    }
+    .navbar-collapse.collapse.in { 
+        display: block !important;
+    }
+    .collapsing {
+        overflow: hidden !important;
+    }
+}
+
+/* Tags: */
+body {
+    position: relative !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 16px;
+}
+h1 {
+    font-size: 50px;
+}
+h2 {
+    font-size: 35px;
+}
+h3 {
+    font-size: 30px;
+    color: white;
+}
+h4 {
+    font-size: 25px;
+}
+h5 {
+    font-size: 20px;
+    font-style: italic;
+    font-weight: 100;
+}
+p {
+    font-size: 20px;
+}
+a,
+a:hover,
+a::selection {
+    color: #AA3939;
+}
+footer {
+    background-color: #222;
+    color: white;
+}
+
+/* Classes: */
+.blurred {
+    transition: 500ms filter linear;
+    filter: blur(10px);
+}
+.unblurred {
+    transition: 500ms filter linear;
+    filter: blur(0px);
+}
+.navbar-inverse {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    border: 0 solid black;
+    border-radius: 0;
+    margin-bottom: 0;
+}
+.header {
+    padding-top: 105px;
+    padding-bottom: 70px;
+    background-color: #3E59BD;
+    border: 0px;
+}
+.header h1 {
+    height: 300px;
+    padding-bottom: 70px;
+    color: white;
+}
+.head {
+    margin-bottom: 50px;
+}
+.content {
+    padding-top: 35px;
+    padding-bottom: 35px;
+}
+.normalized {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.about {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #157D2C;
+    color: white;
+}
+.passions {
+    background-color: #3E59BD;
+}
+.professional {
+    background-color: #FFF458;
+}
+.projects {
+    background-color: #157D2C;
+}
+.social {
+    background-color: #222;
+}
+.code {
+    display:inline;
+    font-family: "Courier New", Courier, monospace;
+    font-style: normal;
+}
+.list-heading {
+    font-weight: 600;
+}
+.list-item {
+    font-weight: 100;
+    margin-bottom: 20px;
+}
+.advanced {
+    color: white;
+}
+/* ID: */
+#beginning {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: 10000000;
+    display: none;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+    font-size: 80px;
+    font-weight: bold;
+    font-style: italic;
+}
+#logoName {
+    display: none;
+}
+#imgScouts {
+    max-width: 15%;
+    margin-right: 15px;
+}
+#sudokuOnlineLogo {
+    max-width: 40%;
+    margin: 10px;
+    border-radius: 0%;
+}
+#mealPlannerLogo,
+#soluCheckLogo {
+    border-radius: 10%;
+}
+#chessLogo {
+    max-width: 40%;
+    margin: 10px;
+    padding: 10px;
+    display: inline-block;
+}
+#messageEditor {
+    overflow:scroll;
+    max-height:300px;
+}
+/* Combinations: */
+h1:hover,
+h2:hover,
+h3:hover,
+a:hover,
+.glyphicon:hover {
+    text-shadow: 1px 1px 25px white;
+}
+.navbar-right a {
+    cursor: pointer;
+}
+.about ul {
+    background-color: #157D2C;
+}
+.about li > a {
+    background-color: #232222;
+    color: white;
+    border: 1px solid white;
+    text-decoration: none;
+}
+.about li.active > a,
+.about li.active > a:focus,
+.about li.active > a:hover,
+.about li > a:hover {
+    background-color: #157D2C;
+    color: white;
+    text-decoration: underline;
+}
+.about li > a::selection {
+    background-color: white;
+}
+.about p {
+    text-indent: 30px;
+}
+.about h1 {
+    font-style: italic;
+}
+.about h2 {
+    text-indent: 10px;
+}
+.about h3 {
+    text-indent: 20px;
+}
+.about a {
+    color: white;
+    text-decoration: underline;
+}
+.about a:hover {
+    color: #B5B4B4;
+}
+.about .col-xs-12 {
+    margin-bottom: 30px;
+}
+.about img.hidden-xs {
+    max-width: 5%;
+    margin-right: 15px;
+}
+.passions {
+    color: white;
+}
+.passions p {
+    text-indent: 2.0em;
+    text-align: left;
+    padding-left: 7%;
+    padding-right: 7%;
+    color: white;
+}
+.passions a {
+    color: #FFC43D;
+    text-decoration: underline;
+}
+.passions a:hover {
+    color: #C03A17;
+    text-decoration: underline;
+}
+.professional img {
+    max-width: 50%;
+    display: inline;
+    margin: 15px;
+}
+.professional li {
+    text-align: left;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 20px;
+}
+.professional h1:hover,
+.professional h2:hover,
+.professional h3:hover,
+.professional a:hover,
+.professional .glyphicon:hover {
+    text-shadow: 1px 1px 25px black !important;
+}
+.projects p,
+.projects li,
+.projects h1 {
+    color: white;
+}
+.projects h5 {
+    color: white;
+}
+.projects .nav-pills > li > a {
+    background-color: #FFF458;
+    border: 1px solid white;
+}
+.projects .nav-pills > li.active > a,
+.projects .nav-pills > li.active > a:focus,
+.projects .nav-pills > li.active > a:hover,
+.projects li > a:hover {
+    background-color: #3E59BD;
+    color: black !important;
+}
+.projects .nav-pills > li > a p {
+    color: black;
+}
+.projects .nav-pills > li > a:hover p,
+.projects .nav-pills > li.active > a p {
+    color: white;
+}
+.projects li > a::selection {
+    background-color: white;
+}
+.projects li p {
+    font-style: italic;
+    font-weight: 500;
+}
+.projects .tab-content {
+    margin-top:30px;
+    color: #1D3462;
+}
+.projects img {
+    max-width: 17.5%;
+    padding: 10px;
+    display: inline-block;
+    margin: 25px;
+}
+.projects li {
+    font-size: 20px;
+}
+.projects p {
+    text-indent: 20px;
+}
+.social-icons i {
+    margin: 1.5%;
+    font-size: 48px;
+}
