@@ -123,6 +123,7 @@ footer {
 }
 .projects {
     background-color: #157D2C;
+    min-height: 100vh;
 }
 .social {
     background-color: #222;
