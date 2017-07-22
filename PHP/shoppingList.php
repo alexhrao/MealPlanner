@@ -1,6 +1,29 @@
 <html>
 	<head>
 		<title>Shopping List</title>
+		<style type="text/css">
+			#shoppingList > td, th, tr, h1, h2 {
+	  			padding-left: 10px;
+			  	padding-right: 10px;
+			  	text-align: center;
+			}
+
+			.formShoppingList {
+			  	display: flex;
+			  	width: 650px;
+			}
+			#submitShoppingList {
+			  	margin-left: 665px;
+			  	margin-top: -40px;
+			}
+			#prefStore {
+			  	width: 200px;
+			  	height: 40px;
+			}
+			#startDate, #endDate, #prefStore {
+			  	flex-grow: 1;
+			}
+		</style>
 	</head>
 </html>
 
