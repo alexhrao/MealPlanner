@@ -157,8 +157,8 @@
 	}
 	else {
 		$arrStores = getStoreInfo();
-		echo   "<div class=\"container-fluid\" style=\"background-color:green;color:white\">
-					<form action=\"shoppingList.php\" name=\"form\" method=\"post\">
+		echo   "<div class=\"container-fluid\">
+					<form action=\"shoppingList.php\" id=\"shoppingListForm\" method=\"post\">
 						<div class=\"row\" style=\"padding:10px;\">
 							<div class=\"col-sm-3 form-group\">
 								<label for=\"startDate\">Start Date:</label>
@@ -183,6 +183,9 @@
 			echo 			   "<option name=\"$ID\" value=$ID>$name</option>";
 		}
 		echo			   "</select>
+						</div>
+						<div class=\"col-sm-3 form-group\">
+							<button type=\"submit\" form=\"shoppingListForm\" value=\"Submit\" class=\"btn btn-primary btn-md\">Submit</button>
 						</div>
 					</div>
 				</form>
