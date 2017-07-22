@@ -1,29 +1,6 @@
 <html>
 	<head>
 		<title>Shopping List</title>
-		<style type="text/css">
-			#shoppingList > td, th, tr, h1, h2 {
-	  			padding-left: 10px;
-			  	padding-right: 10px;
-			  	text-align: center;
-			}
-
-			.formShoppingList {
-			  	display: flex;
-			  	width: 650px;
-			}
-			#submitShoppingList {
-			  	margin-left: 665px;
-			  	margin-top: -40px;
-			}
-			#prefStore {
-			  	width: 200px;
-			  	height: 40px;
-			}
-			#startDate, #endDate, #prefStore {
-			  	flex-grow: 1;
-			}
-		</style>
 	</head>
 </html>
 
@@ -162,15 +139,15 @@
 						<div class=\"row\" style=\"padding:10px;\">
 							<div class=\"col-sm-3 form-group\">
 								<label for=\"startDate\">Start Date:</label>
-								<input type=\"date\" class=\"form-control\" id=\"startDate\">
+								<input type=\"date\" class=\"form-control\" name=\"startDate\" id=\"startDate\">
 							</div>
 							<div class=\"col-sm-3 form-group\">
 								<label for=\"endDate\">End Date:</label>
-								<input type=\"date\" class=\"form-control\" id=\"endDate\">
+								<input type=\"date\" class=\"form-control\" name=\"endDate\" id=\"endDate\">
 							</div>
 							<div class=\"col-sm-3 form-group\">
 								<label for=\"prefStore\">Preferred Store:</label>
-								<select class=\"form-control\" id=\"prefStore\">";
+								<select name=\"prefStore\" class=\"form-control\" id=\"prefStore\">";
 		foreach ($arrStores as $ID => $name) {
 			echo 				   "<option value=$ID>$name</option>";
 		}
