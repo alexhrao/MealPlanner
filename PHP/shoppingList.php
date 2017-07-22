@@ -185,7 +185,7 @@
 		echo			   "</select>
 						</div>
 						<div class=\"col-sm-3 form-group\">
-							<button type=\"submit\" form=\"shoppingListForm\" value=\"Submit\" class=\"btn btn-primary btn-md\">Submit</button>
+							<button type=\"submit\" form=\"shoppingListForm\" value=\"submit\" class=\"btn btn-primary btn-md\">Submit</button>
 						</div>
 					</div>
 				</form>
