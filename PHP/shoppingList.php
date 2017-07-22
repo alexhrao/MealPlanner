@@ -157,34 +157,38 @@
 	}
 	else {
 		$arrStores = getStoreInfo();
-		echo "<form action=\"shoppingList.php\" name=\"form\" method=\"post\">
-				<div class=\"formShoppingList\">
-					<div id=\"startDate\">
-						Start Date: <br><input type=\"date\" name=\"startDate\">
-					</div>
-					<div id=\"endDate\">
-						End Date: <br><input type=\"date\" name=\"endDate\">
-					</div>
-					<div id=\"prefStore\">
-						Preferred Store: <br><select id=\"prefStore\"  name=\"prefStore\">";
+		echo   "<div class=\"container-fluid\" style=\"background-color:green;color:white\">
+					<form action=\"shoppingList.php\" name=\"form\" method=\"post\">
+						<div class=\"row\" style=\"padding:10px;\">
+							<div class=\"col-sm-3 form-group\">
+								<label for=\"startDate\">Start Date:</label>
+								<input type=\"date\" class=\"form-control\" id=\"startDate\">
+							</div>
+							<div class=\"col-sm-3 form-group\">
+								<label for=\"endDate\">End Date:</label>
+								<input type=\"date\" class=\"form-control\" id=\"endDate\">
+							</div>
+							<div class=\"col-sm-3 form-group\">
+								<label for=\"prefStore\">Preferred Store:</label>
+								<select class=\"form-control\" id=\"prefStore\">";
 		foreach ($arrStores as $ID => $name) {
-			echo 			"<option value=$ID>$name</option>";
+			echo 				   "<option value=$ID>$name</option>";
 		}
-		echo 			"</select>
-					</div>
-					<div id=\"exempt\">
-						Exempt Stores:<br>";
+		echo				   "</select>
+							</div>
+							<div class=\"col-sm-3 form-group\">
+							<label for=\"exemptStores\">Exempt Stores:</label>
+							<select multiple class=\"form-control\" id=\"exemptStores\">";
 		foreach ($arrStores as $ID => $name) {
-			echo 		"<input type=\"checkbox\" name=\"$ID\" value=$ID>&nbsp;&nbsp;$name<br>";
+			echo 			   "<option name=\"$ID\" value=$ID>$name</option>";
 		}
-		echo		"</div>
-				</div>
-			<div id=\"submitShoppingList\">
-				<input type=\"submit\" name=\"submit\" value=\"Generate Shopping List\">
-			</div>
-			</form>";
-			exit;
-		}
+		echo			   "</select>
+						</div>
+					</div>
+				</form>
+			</div>";
+		exit;
+	}
 	$arrList = getShoppingListInfo($startDate, $endDate, $prefStore, $arrExempt);
 	$intTotal = 0;
 	echo "<h1 id=\"shoppingList\"><strong>Shopping List</strong></h1><br>";
